@@ -81,7 +81,7 @@
   border-radius: 10px;
   padding: 10px 14px;
   margin-bottom: 16px;
-  color: #ef4444;
+  color: #e70e0e;
   font-size: 14px;
   display: flex;
   align-items: center;
@@ -130,7 +130,7 @@
 }
 
 .login-form .form-group input.error {
-  border-color: #ef4444;
+  border-color: #dd1923;
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.04);
 }
 
@@ -142,7 +142,7 @@
 .login-form .form-group .error-message {
   display: block;
   font-size: 12px;
-  color: #ef4444;
+  color: #d8152f;
   margin-top: 4px;
   min-height: 18px;
 }
@@ -318,14 +318,14 @@
   display: block;
   background: rgba(52, 211, 153, 0.06);
   border: 1px solid rgba(52, 211, 153, 0.06);
-  color: #34d399;
+  color: #10dd92;
 }
 
 .login-message.error {
   display: block;
   background: rgba(239, 68, 68, 0.06);
   border: 1px solid rgba(239, 68, 68, 0.06);
-  color: #ef4444;
+  color: #e01122;
 }
 
 /* ========================================
