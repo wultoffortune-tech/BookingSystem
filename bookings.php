@@ -38,7 +38,7 @@ if (isset($_GET['cancel']) && is_numeric($_GET['cancel'])) {
 
             $pdo->commit();
 
-            $_SESSION['cancel_message'] = '✅ Your booking has been cancelled successfully. You can now delete it.';
+            $_SESSION['cancel_message'] = '✅ Your booking has been cancelled successfully.';
             $_SESSION['cancel_type'] = 'success';
         } else {
             $_SESSION['cancel_message'] = '❌ Booking not found.';
@@ -606,7 +606,7 @@ include 'includes/header.php';
                 <h3>No Bookings Yet</h3>
                 <p>You haven't booked any tickets yet. Start your journey now!</p>
                 <a href="schedule.php" class="btn-schedule">
-                    <i class="fas fa-search"></i> Find Buses
+                    <i class="fas fa-search"></i> Find buses
                 </a>
             </div>
         <?php endif; ?>

@@ -477,7 +477,7 @@ body {
   color: #f7f7ff;
   border: none;
   border-radius: var(--radius-md);
-  padding: 16px 20px;
+  padding: 16px 10px;
   font-size: 18px;
   font-weight: 700;
   cursor: pointer;

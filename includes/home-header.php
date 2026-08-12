@@ -40,7 +40,7 @@ $base_url = '/booking-system/';
                     <?php endif; ?>
                     <li><a href="<?php echo $base_url; ?>logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 <?php else: ?>
-                    <li><a href="<?php echo $base_url; ?>login/login.php"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+                    <li><a href="<?php echo $base_url; ?>login/login.php" ><i class="fas fa-sign-in-alt"></i> Login</a></li>
                     <li><a href="<?php echo $base_url; ?>register/register.php"><i class="fas fa-user-plus"></i> Register</a></li>
                 <?php endif; ?>
             </ul>
