@@ -142,7 +142,7 @@
 .login-form .form-group .error-message {
   display: block;
   font-size: 12px;
-  color: #d8152f;
+  color: #0f55d8;
   margin-top: 4px;
   min-height: 18px;
 }
@@ -311,6 +311,7 @@
   font-size: 14px;
   text-align: center;
   display: none;
+  color: #0ea5e9;
   animation: fadeIn 0.4s ease;
 }
 
@@ -325,7 +326,7 @@
   display: block;
   background: rgba(239, 68, 68, 0.06);
   border: 1px solid rgba(239, 68, 68, 0.06);
-  color: #e01122;
+  color: #3d03dd;
 }
 
 /* ========================================
