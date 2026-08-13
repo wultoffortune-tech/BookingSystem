@@ -173,7 +173,7 @@ include 'includes/header.php';
         margin: 0 auto;
     }
 
-    .bookings-stats {
+    .bookings-seats {
         display: flex;
         gap: 20px;
         justify-content: center;
@@ -181,7 +181,7 @@ include 'includes/header.php';
         margin-bottom: 30px;
     }
 
-    .bookings-stats .stat {
+    .bookings-seats .seat {
         background: rgba(255, 255, 255, 0.02);
         border: 1px solid rgba(255, 255, 255, 0.04);
         border-radius: 12px;
@@ -189,26 +189,26 @@ include 'includes/header.php';
         text-align: center;
     }
 
-    .bookings-stats .stat .number {
+    .bookings-seats .seat .number {
         font-size: 24px;
         font-weight: 700;
         color: #FFFFFF;
     }
 
-    .bookings-stats .stat .label {
+    .bookings-seats .seat .label {
         font-size: 13px;
         color: #94A3B8;
     }
 
-    .bookings-stats .stat .number.pending {
+    .bookings-seats .seat .number.pending {
         color: #F59E0B;
     }
 
-    .bookings-stats .stat .number.confirmed {
+    .bookings-seats .seat .number.confirmed {
         color: #34D399;
     }
 
-    .bookings-stats .stat .number.cancelled {
+    .bookings-seats .seat .number.cancelled {
         color: #EF4444;
     }
 
@@ -458,11 +458,11 @@ include 'includes/header.php';
             font-size: 17px;
         }
 
-        .bookings-stats {
+        .bookings-seats {
             gap: 12px;
         }
 
-        .bookings-stats .stat {
+        .bookings-seats .seat {
             padding: 10px 16px;
             min-width: 80px;
         }
@@ -513,26 +513,26 @@ include 'includes/header.php';
             </div>
         <?php endif; ?>
 
-        <!-- Stats -->
-        <div class="bookings-stats">
-            <div class="stat">
+        <!-- Seats -->
+        <div class="bookings-seats">
+            <div class="seat">
                 <div class="number"><?php echo $total_bookings; ?></div>
                 <div class="label">Total Bookings</div>
             </div>
             <?php if ($pending > 0): ?>
-                <div class="stat">
+                <div class="seat">
                     <div class="number pending"><?php echo $pending; ?></div>
                     <div class="label">Pending</div>
                 </div>
             <?php endif; ?>
             <?php if ($confirmed > 0): ?>
-                <div class="stat">
+                <div class="seat">
                     <div class="number confirmed"><?php echo $confirmed; ?></div>
                     <div class="label">Confirmed</div>
                 </div>
             <?php endif; ?>
             <?php if ($cancelled > 0): ?>
-                <div class="stat">
+                <div class="seat">
                     <div class="number cancelled"><?php echo $cancelled; ?></div>
                     <div class="label">Cancelled</div>
                 </div>
