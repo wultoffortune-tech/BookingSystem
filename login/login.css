@@ -81,7 +81,7 @@
   border-radius: 10px;
   padding: 10px 14px;
   margin-bottom: 16px;
-  color: #ef4444;
+  color: #091feb;
   font-size: 14px;
   display: flex;
   align-items: center;
@@ -142,7 +142,7 @@
 .login-form .form-group .error-message {
   display: block;
   font-size: 12px;
-  color: #ef4444;
+  color: #231ff5;
   margin-top: 4px;
   min-height: 18px;
 }
@@ -325,7 +325,7 @@
   display: block;
   background: rgba(239, 68, 68, 0.06);
   border: 1px solid rgba(239, 68, 68, 0.06);
-  color: #ef4444;
+  color: #0717f1;
 }
 
 /* ========================================

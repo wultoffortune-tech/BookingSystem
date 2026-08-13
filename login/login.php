@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// If already logged in, redirect based on role
+// // If already logged in, redirect based on role
 // if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
 //     if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
 //         header('Location: ../admin/dashboard.php');

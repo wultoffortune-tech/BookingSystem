@@ -62,7 +62,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $response['redirect'] = '../home.php';
             }
-
+            // if (empty($email) || empty($password)) {
+            //     $_SESSION['staff_login_error'] = 'Please fill in all fields.';
+            //     header('Location: login.php');
+            //     exit();
+            // }
             echo json_encode($response);
             exit();
         } else {
