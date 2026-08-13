@@ -1,5 +1,8 @@
 <?php
 $base_url = '/booking-system/';
+
+// Get current page name for active link detection
+$current_page = basename($_SERVER['PHP_SELF']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -26,22 +29,68 @@ $base_url = '/booking-system/';
         <div class="container">
             <a href="<?php echo $base_url; ?>home.php" class="nav-brand">
                 <img src="<?php echo $base_url; ?>assets/images/logo.png" alt="CamExpress logo" class="logo-image">
-                <span>CamExpress</span>
+                <span>Cam<span class="highlight">Express</span></span>
             </a>
             <ul class="nav-links">
-                <li><a href="<?php echo $base_url; ?>home.php" class="active"><i class="fas fa-home"></i> Home</a></li>
-                <li><a href="<?php echo $base_url; ?>routes.php"><i class="fas fa-route"></i> Routes</a></li>
-                <li><a href="<?php echo $base_url; ?>schedule.php"><i class="fas fa-calendar-alt"></i> Schedule</a></li>
+                <!-- HOME -->
+                <li>
+                    <a href="<?php echo $base_url; ?>home.php" class="<?php echo ($current_page == 'home.php' || $current_page == 'index.php' || $current_page == '') ? 'active' : ''; ?>">
+                        <i class="fas fa-home"></i> Home
+                    </a>
+                </li>
+
+                <!-- ROUTES -->
+                <li>
+                    <a href="<?php echo $base_url; ?>routes.php" class="<?php echo ($current_page == 'routes.php') ? 'active' : ''; ?>">
+                        <i class="fas fa-route"></i> Routes
+                    </a>
+                </li>
+
+                <!-- SCHEDULE -->
+                <li>
+                    <a href="<?php echo $base_url; ?>schedule.php" class="<?php echo ($current_page == 'schedule.php') ? 'active' : ''; ?>">
+                        <i class="fas fa-calendar-alt"></i> Schedule
+                    </a>
+                </li>
 
                 <?php if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true): ?>
-                    <li><a href="<?php echo $base_url; ?>bookings.php"><i class="fas fa-ticket-alt"></i> Bookings</a></li>
+                    <!-- BOOKINGS -->
+                    <li>
+                        <a href="<?php echo $base_url; ?>bookings.php" class="<?php echo ($current_page == 'bookings.php') ? 'active' : ''; ?>">
+                            <i class="fas fa-ticket-alt"></i> Bookings
+                        </a>
+                    </li>
+
                     <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
-                        <li><a href="<?php echo $base_url; ?>admin/dashboard.php"><i class="fas fa-user-shield"></i> Dashboard</a></li>
+                        <!-- ADMIN DASHBOARD -->
+                        <li>
+                            <a href="<?php echo $base_url; ?>admin/dashboard.php" class="<?php echo ($current_page == 'dashboard.php') ? 'active' : ''; ?>">
+                                <i class="fas fa-user-shield"></i> Dashboard
+                            </a>
+                        </li>
                     <?php endif; ?>
-                    <li><a href="<?php echo $base_url; ?>logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+
+                    <!-- LOGOUT -->
+                    <li>
+                        <a href="<?php echo $base_url; ?>logout.php" class="<?php echo ($current_page == 'logout.php') ? 'active' : ''; ?>">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </li>
+
                 <?php else: ?>
-                    <li><a href="<?php echo $base_url; ?>login/login.php"><i class="fas fa-sign-in-alt"></i> Login</a></li>
-                    <li><a href="<?php echo $base_url; ?>register/register.php"><i class="fas fa-user-plus"></i> Register</a></li>
+                    <!-- LOGIN -->
+                    <li>
+                        <a href="<?php echo $base_url; ?>login/login.php" class="<?php echo ($current_page == 'login.php') ? 'active' : ''; ?>">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                    </li>
+
+                    <!-- REGISTER -->
+                    <li>
+                        <a href="<?php echo $base_url; ?>register/register.php" class="<?php echo ($current_page == 'register.php') ? 'active' : ''; ?>">
+                            <i class="fas fa-user-plus"></i> Register
+                        </a>
+                    </li>
                 <?php endif; ?>
             </ul>
         </div>

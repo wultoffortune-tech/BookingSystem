@@ -1,5 +1,5 @@
 /* ========================================
-   CAMEXPRESS - Luxe Booking Experience
+   CAMEXPRESS - Complete Style with Active Link Underline
    ======================================== */
 
 /* ===== VARIABLES ===== */
@@ -10,7 +10,7 @@
   --surface-strong: rgba(255, 255, 255, 0.1);
   --surface-soft: rgba(255, 255, 255, 0.03);
   --text: #f5f5fb;
-  --text-muted: #fafbfd;
+  --text-muted: #c8c8e0;
   --text-strong: #ffffff;
   --primary: #7c5cff;
   --primary-soft: #a288ff;
@@ -76,7 +76,9 @@ body {
   background: rgba(124, 92, 255, 0.85);
 }
 
-/* ===== NAVBAR ===== */
+/* ========================================
+   NAVBAR
+   ======================================== */
 .navbar {
   position: fixed;
   width: 100%;
@@ -109,6 +111,10 @@ body {
   color: var(--accent);
 }
 
+.nav-brand .highlight {
+  color: var(--accent);
+}
+
 .nav-brand .logo-image {
   width: 42px;
   height: 42px;
@@ -117,6 +123,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+/* ===== NAV LINKS ===== */
 .nav-links {
   display: flex;
   align-items: center;
@@ -124,6 +131,7 @@ body {
   list-style: none;
 }
 
+/* ----- DEFAULT LINK STATE ----- */
 .nav-links a {
   text-decoration: none;
   color: var(--text-muted);
@@ -134,43 +142,75 @@ body {
   position: relative;
 }
 
+/* ----- UNDERLINE EFFECT (Hidden by default) ----- */
 .nav-links a::after {
   content: "";
   position: absolute;
   left: 50%;
-  bottom: 8px;
+  bottom: 4px;
   width: 0;
-  height: 2px;
+  height: 2.5px;
   background: var(--accent);
   transition: var(--transition);
   transform: translateX(-50%);
+  border-radius: 2px;
 }
 
-.nav-links a:hover,
-.nav-links a.active {
-  color: var(--text-strong);
-}
-
-.nav-links a:hover::after,
-.nav-links a.active::after {
+/* ----- HOVER UNDERLINE (Appears on hover) ----- */
+.nav-links a:hover::after {
   width: 50%;
 }
 
+.nav-links a:hover {
+  color: var(--text-strong);
+}
+
+/* ----- ACTIVE UNDERLINE (Always visible on active page) ----- */
+.nav-links a.active::after {
+  width: 60%;
+  background: var(--accent);
+  box-shadow: 0 0 16px rgba(244, 201, 92, 0.3);
+}
+
+.nav-links a.active {
+  color: var(--text-strong);
+  background: rgba(124, 92, 255, 0.06);
+}
+
+/* ----- LOGIN/REGISTER BUTTON (No underline) ----- */
 .nav-links a:last-child {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(124, 92, 255, 0.15) !important;
   color: var(--text-strong) !important;
   border-radius: var(--radius-full);
-  padding: 12px 24px;
+  padding: 10px 24px;
   border: 1px solid rgba(124, 92, 255, 0.16);
-  box-shadow: 0 14px 40px rgba(124, 92, 255, 0.14);
+  box-shadow: 0 14px 40px rgba(124, 92, 255, 0.1);
+}
+
+.nav-links a:last-child::after {
+  display: none !important;
 }
 
 .nav-links a:last-child:hover {
   transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(124, 92, 255, 0.25) !important;
+  box-shadow: 0 14px 40px rgba(124, 92, 255, 0.18);
 }
 
-/* ===== HERO ===== */
+/* ----- LOGOUT BUTTON (Red tint) ----- */
+.nav-links a:last-child[href="../logout.php"] {
+  background: rgba(239, 68, 68, 0.08) !important;
+  border-color: rgba(239, 68, 68, 0.12);
+  color: #ef4444 !important;
+}
+
+.nav-links a:last-child[href="../logout.php"]:hover {
+  background: rgba(239, 68, 68, 0.16) !important;
+}
+
+/* ========================================
+   HERO
+   ======================================== */
 .hero {
   min-height: 100vh;
   display: flex;
@@ -371,7 +411,9 @@ body {
   line-height: 1.8;
 }
 
-/* ===== SEARCH BOX ===== */
+/* ========================================
+   SEARCH BOX
+   ======================================== */
 .search-box {
   background: rgba(10, 16, 34, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -435,8 +477,8 @@ body {
   color: #f7f7ff;
   border: none;
   border-radius: var(--radius-md);
-  padding: 17px 20px;
-  font-size: 16px;
+  padding: 16px 10px;
+  font-size: 18px;
   font-weight: 700;
   cursor: pointer;
   transition: var(--transition-smooth);
@@ -460,7 +502,9 @@ body {
   font-size: 18px;
 }
 
-/* ===== FEATURES ===== */
+/* ========================================
+   FEATURES
+   ======================================== */
 .features {
   padding: 84px 0 60px;
 }
@@ -573,7 +617,9 @@ body {
   width: 56px;
 }
 
-/* ===== FOOTER ===== */
+/* ========================================
+   FOOTER
+   ======================================== */
 .footer {
   background: linear-gradient(180deg, #07112b 0%, #070b1d 100%);
   color: var(--text-muted);
@@ -653,7 +699,9 @@ body {
   color: var(--accent);
 }
 
-/* ===== RESPONSIVE ===== */
+/* ========================================
+   RESPONSIVE
+   ======================================== */
 @media (max-width: 1024px) {
   .features-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -681,6 +729,10 @@ body {
 
   .hero p {
     font-size: 1rem;
+  }
+
+  .nav-links a.active::after {
+    width: 30%;
   }
 }
 
