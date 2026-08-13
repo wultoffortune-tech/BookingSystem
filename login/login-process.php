@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $response['redirect'] = '../home.php';
             }
 
-        
+
             echo json_encode($response);
             exit();
         } else {

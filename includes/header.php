@@ -61,6 +61,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
                         </a>
                     </li>
 
+
+
                     <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
                         <!-- ADMIN DASHBOARD -->
                         <li>
@@ -69,6 +71,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
                             </a>
                         </li>
                     <?php endif; ?>
+
+
 
                     <!-- LOGOUT -->
                     <li>
