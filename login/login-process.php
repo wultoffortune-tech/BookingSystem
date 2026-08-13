@@ -41,6 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['user_name'] = $user['full_name'];
             $_SESSION['user_email'] = $user['email'];
             $_SESSION['admin_name'] = $user['full_name'];
+           
             $_SESSION['full_name'] = $user['full_name'];
             $_SESSION['user_role'] = isset($user['role']) ? $user['role'] : 'user';
             $_SESSION['logged_in'] = true;
@@ -62,11 +63,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $response['redirect'] = '../home.php';
             }
-            // if (empty($email) || empty($password)) {
-            //     $_SESSION['staff_login_error'] = 'Please fill in all fields.';
-            //     header('Location: login.php');
-            //     exit();
-            // }
+
+        
             echo json_encode($response);
             exit();
         } else {

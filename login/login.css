@@ -81,11 +81,7 @@
   border-radius: 10px;
   padding: 10px 14px;
   margin-bottom: 16px;
-<<<<<<< HEAD
-  color: #091feb;
-=======
-  color: #e70e0e;
->>>>>>> 9aa0d5d7c953232a33e4b4868fb3e23eeb785905
+  color: #1e10e0;
   font-size: 14px;
   display: flex;
   align-items: center;
@@ -134,7 +130,7 @@
 }
 
 .login-form .form-group input.error {
-  border-color: #dd1923;
+  border-color: #2710f8;
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.04);
 }
 
@@ -146,11 +142,7 @@
 .login-form .form-group .error-message {
   display: block;
   font-size: 12px;
-<<<<<<< HEAD
-  color: #231ff5;
-=======
   color: #0f55d8;
->>>>>>> 9aa0d5d7c953232a33e4b4868fb3e23eeb785905
   margin-top: 4px;
   min-height: 18px;
 }
@@ -334,11 +326,7 @@
   display: block;
   background: rgba(239, 68, 68, 0.06);
   border: 1px solid rgba(239, 68, 68, 0.06);
-<<<<<<< HEAD
-  color: #0717f1;
-=======
   color: #3d03dd;
->>>>>>> 9aa0d5d7c953232a33e4b4868fb3e23eeb785905
 }
 
 /* ========================================

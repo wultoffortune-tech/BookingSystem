@@ -70,8 +70,8 @@ $display_price = isset($schedule['price']) && $schedule['price'] > 0
     ? $schedule['price']
     : (isset($schedule['base_fare']) ? $schedule['base_fare'] : 0);
 
-// Get reserved seats
-$stmt = $pdo->prepare("SELECT seat_number FROM reservation WHERE schedule_id = ?");
+// Get reserved seats - Only count seats that are NOT cancelled
+$stmt = $pdo->prepare("SELECT seat_number FROM reservation WHERE schedule_id = ? AND status != 'cancelled'");
 $stmt->execute([$schedule_id]);
 $reserved = array_column($stmt->fetchAll(), 'seat_number');
 
@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->beginTransaction();
 
             // Double check seat is still available
-            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM reservation WHERE schedule_id = ? AND seat_number = ?");
+            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM reservation WHERE schedule_id = ? AND seat_number = ? AND status != 'cancelled'");
             $stmt->execute([$schedule_id, $seat_number]);
             $check = $stmt->fetch();
 
@@ -108,17 +108,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Column doesn't exist, skip
                 }
 
-                // ✅ Insert without reservation_date
-                if ($hasBookingCode) {
+                // ✅ Check if seats_released column exists
+                $hasSeatsReleased = false;
+                try {
+                    $stmt = $pdo->query("SHOW COLUMNS FROM reservation LIKE 'seats_released'");
+                    if ($stmt->fetch()) {
+                        $hasSeatsReleased = true;
+                    }
+                } catch (PDOException $e) {
+                    // Column doesn't exist, skip
+                }
+
+                // ✅ Insert with seats_released = 0 for new bookings
+                if ($hasBookingCode && $hasSeatsReleased) {
                     $booking_code = generateBookingCode($pdo);
                     $stmt = $pdo->prepare("INSERT INTO reservation 
-                                           (booking_code, passenger_id, schedule_id, seat_number, fare_paid) 
-                                           VALUES (?, ?, ?, ?, ?)");
+                                           (booking_code, passenger_id, schedule_id, seat_number, fare_paid, status, seats_released) 
+                                           VALUES (?, ?, ?, ?, ?, 'pending', 0)");
+                    $stmt->execute([$booking_code, $user_id, $schedule_id, $seat_number, $display_price]);
+                } elseif ($hasBookingCode) {
+                    $booking_code = generateBookingCode($pdo);
+                    $stmt = $pdo->prepare("INSERT INTO reservation 
+                                           (booking_code, passenger_id, schedule_id, seat_number, fare_paid, status) 
+                                           VALUES (?, ?, ?, ?, 'pending')");
                     $stmt->execute([$booking_code, $user_id, $schedule_id, $seat_number, $display_price]);
                 } else {
                     $stmt = $pdo->prepare("INSERT INTO reservation 
-                                           (passenger_id, schedule_id, seat_number, fare_paid) 
-                                           VALUES (?, ?, ?, ?)");
+                                           (passenger_id, schedule_id, seat_number, fare_paid, status) 
+                                           VALUES (?, ?, 'pending')");
                     $stmt->execute([$user_id, $schedule_id, $seat_number, $display_price]);
                 }
 
@@ -622,7 +639,7 @@ include 'includes/header.php';
                         </div>
                     </div>
 
-                    <button type="submit" class="btn-confirm" id="confirmBtn">
+                    <button type="submit" class="btn-confirm" id="confirmBtn" disabled>
                         <i class="fas fa-check-circle"></i> Confirm Reservation
                     </button>
                 </form>

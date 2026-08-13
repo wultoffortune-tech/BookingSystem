@@ -15,7 +15,7 @@ require_once 'config/database.php';
 $user_id = $_SESSION['user_id'];
 
 // ========================================
-// HANDLE CANCELLATION - Set status to cancelled
+// HANDLE CANCELLATION - Set status to cancelled + Release seat
 // ========================================
 if (isset($_GET['cancel']) && is_numeric($_GET['cancel'])) {
     $reservation_id = (int)$_GET['cancel'];
@@ -23,23 +23,31 @@ if (isset($_GET['cancel']) && is_numeric($_GET['cancel'])) {
     try {
         $pdo->beginTransaction();
 
-        $stmt = $pdo->prepare("SELECT schedule_id, seat_number FROM reservation WHERE reservation_id = ? AND passenger_id = ?");
+        // Lock the row to prevent double cancel
+        $stmt = $pdo->prepare("SELECT reservation_id, schedule_id, seat_number, status, seats_released FROM reservation WHERE reservation_id = ? AND passenger_id = ? FOR UPDATE");
         $stmt->execute([$reservation_id, $user_id]);
         $reservation = $stmt->fetch();
 
         if ($reservation) {
-            // Update status to cancelled
-            $stmt = $pdo->prepare("UPDATE reservation SET status = 'cancelled' WHERE reservation_id = ? AND passenger_id = ?");
-            $stmt->execute([$reservation_id, $user_id]);
+            if ($reservation['status'] == 'cancelled') {
+                $_SESSION['cancel_message'] = '⚠️ This booking is already cancelled.';
+                $_SESSION['cancel_type'] = 'error';
+            } else {
+                // 1. Update status to cancelled + mark seat as released
+                $stmt = $pdo->prepare("UPDATE reservation SET status = 'cancelled', seats_released = 1, cancelled_at = NOW() WHERE reservation_id = ? AND passenger_id = ?");
+                $stmt->execute([$reservation_id, $user_id]);
 
-            // Increase available seats back
-            $stmt = $pdo->prepare("UPDATE schedule SET available_seats = available_seats + 1 WHERE schedule_id = ?");
-            $stmt->execute([$reservation['schedule_id']]);
+                // 2. Increase available seats back - only if not already released
+                if ($reservation['seats_released'] == 0) {
+                    $stmt = $pdo->prepare("UPDATE schedule SET available_seats = available_seats + 1 WHERE schedule_id = ?");
+                    $stmt->execute([$reservation['schedule_id']]);
+                }
 
-            $pdo->commit();
+                $pdo->commit();
 
-            $_SESSION['cancel_message'] = '✅ Your booking has been cancelled successfully.';
-            $_SESSION['cancel_type'] = 'success';
+                $_SESSION['cancel_message'] = '✅ Your booking has been cancelled and seat released successfully.';
+                $_SESSION['cancel_type'] = 'success';
+            }
         } else {
             $_SESSION['cancel_message'] = '❌ Booking not found.';
             $_SESSION['cancel_type'] = 'error';
@@ -56,18 +64,18 @@ if (isset($_GET['cancel']) && is_numeric($_GET['cancel'])) {
 }
 
 // ========================================
-// HANDLE DELETE - Permanently delete cancelled ticket
+// HANDLE DELETE - Permanently delete cancelled ticket ONLY if seat released
 // ========================================
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     $reservation_id = (int)$_GET['delete'];
 
     try {
-        // Only allow deletion if status is 'cancelled'
-        $stmt = $pdo->prepare("SELECT status FROM reservation WHERE reservation_id = ? AND passenger_id = ?");
+        // Only allow deletion if status is 'cancelled' AND seats_released = 1
+        $stmt = $pdo->prepare("SELECT status, seats_released FROM reservation WHERE reservation_id = ? AND passenger_id = ?");
         $stmt->execute([$reservation_id, $user_id]);
         $reservation = $stmt->fetch();
 
-        if ($reservation && $reservation['status'] == 'cancelled') {
+        if ($reservation && $reservation['status'] == 'cancelled' && $reservation['seats_released'] == 1) {
             // Permanently delete the cancelled reservation
             $stmt = $pdo->prepare("DELETE FROM reservation WHERE reservation_id = ? AND passenger_id = ?");
             $stmt->execute([$reservation_id, $user_id]);
@@ -75,7 +83,7 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
             $_SESSION['cancel_message'] = '🗑️ Ticket has been deleted permanently.';
             $_SESSION['cancel_type'] = 'success';
         } else {
-            $_SESSION['cancel_message'] = '❌ This ticket cannot be deleted. Only cancelled tickets can be deleted.';
+            $_SESSION['cancel_message'] = '❌ This ticket cannot be deleted. Seat must be released first.';
             $_SESSION['cancel_type'] = 'error';
         }
     } catch (PDOException $e) {
@@ -88,9 +96,9 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     exit();
 }
 
-// ✅ FIXED: Removed r.reservation_date from SELECT
+// ✅ SELECT
 $sql = "SELECT r.reservation_id, r.booking_code, r.seat_number, r.fare_paid, 
-               r.status,
+               r.status, r.seats_released,
                s.departure_time, s.arrival_time, 
                rt.original_city, rt.destination, 
                b.bus_name, b.bus_type
@@ -106,16 +114,14 @@ $stmt->execute([$user_id]);
 $bookings = $stmt->fetchAll();
 
 // Get message if any
+// Get message if any
 $cancel_message = isset($_SESSION['cancel_message']) ? $_SESSION['cancel_message'] : '';
 $cancel_type = isset($_SESSION['cancel_type']) ? $_SESSION['cancel_type'] : '';
 unset($_SESSION['cancel_message']);
 unset($_SESSION['cancel_type']);
-
 // Count bookings by status
 $total_bookings = count($bookings);
-$pending = 0;
-$confirmed = 0;
-$cancelled = 0;
+$pending = $confirmed = $cancelled = 0;
 
 foreach ($bookings as $b) {
     $status = isset($b['status']) ? $b['status'] : 'pending';
@@ -613,5 +619,4 @@ include 'includes/header.php';
 
     </div>
 </section>
-
 <?php include 'includes/footer.php'; ?>
