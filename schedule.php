@@ -96,32 +96,40 @@ foreach ($schedules as $s) {
 }
 ?>
 
-<!-- ===== SCHEDULE CSS ===== -->
+<!-- ===== SCHEDULE CSS (MATCHING ADMIN DARK THEME) ===== -->
 <style>
+    /* Reset & Base */
     .schedule-section {
         padding: 120px 0 60px;
         min-height: 70vh;
         background: #0F172A;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 24px;
     }
 
     .schedule-section h1 {
-        font-size: 36px;
+        font-size: 32px;
         font-weight: 700;
         color: #FFFFFF;
-        margin-bottom: 8px;
+        margin-bottom: 4px;
     }
 
     .schedule-section .subtitle {
         color: #94A3B8;
-        font-size: 16px;
-        margin-bottom: 30px;
+        font-size: 15px;
+        margin-bottom: 32px;
     }
 
-    /* ===== FILTER BAR ===== */
+    /* ===== FILTER BAR (Dark Panel) ===== */
     .filter-bar {
         background: #1E293B;
         border-radius: 12px;
-        padding: 20px 24px;
+        padding: 24px 28px;
         margin-bottom: 30px;
         border: 1px solid rgba(255, 255, 255, 0.04);
         display: flex;
@@ -142,31 +150,36 @@ foreach ($schedules as $s) {
         color: #94A3B8;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        margin-bottom: 4px;
+        margin-bottom: 6px;
+    }
+
+    .filter-group label i {
+        color: #38BDF8;
+        margin-right: 4px;
     }
 
     .filter-group input,
     .filter-group select {
         width: 100%;
         padding: 10px 14px;
-        border: 1px solid rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.06);
         border-radius: 8px;
         font-size: 14px;
         font-family: 'Poppins', sans-serif;
-        background: rgba(255, 255, 255, 0.02);
+        background: #0F172A;
         color: #FFFFFF;
         transition: all 0.3s ease;
+        outline: none;
     }
 
     .filter-group input:focus,
     .filter-group select:focus {
-        outline: none;
         border-color: #38BDF8;
-        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.04);
+        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
     }
 
     .filter-group input::placeholder {
-        color: #64748B;
+        color: #475569;
     }
 
     .filter-group select option {
@@ -201,11 +214,12 @@ foreach ($schedules as $s) {
     .btn-filter:hover {
         background: #0EA5E9;
         transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
     }
 
     .btn-reset {
         padding: 10px 20px;
-        background: transparent;
+        background: rgba(255, 255, 255, 0.04);
         color: #94A3B8;
         border: 1px solid rgba(255, 255, 255, 0.04);
         border-radius: 8px;
@@ -222,7 +236,7 @@ foreach ($schedules as $s) {
     }
 
     .btn-reset:hover {
-        background: rgba(255, 255, 255, 0.02);
+        background: rgba(255, 255, 255, 0.08);
         color: #FFFFFF;
     }
 
@@ -231,11 +245,11 @@ foreach ($schedules as $s) {
         display: flex;
         gap: 30px;
         flex-wrap: wrap;
-        margin-bottom: 20px;
+        margin-bottom: 24px;
         padding: 12px 20px;
-        background: rgba(56, 189, 248, 0.02);
+        background: rgba(56, 189, 248, 0.03);
         border-radius: 8px;
-        border: 1px solid rgba(56, 189, 248, 0.04);
+        border: 1px solid rgba(56, 189, 248, 0.06);
     }
 
     .filter-stats .stat-item {
@@ -258,24 +272,24 @@ foreach ($schedules as $s) {
     /* ===== SCHEDULE GRID ===== */
     .schedule-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
         gap: 20px;
     }
 
-    /* ===== WHITE CARDS ===== */
+    /* ===== DARK SCHEDULE CARDS ===== */
     .schedule-card {
-        background: #FFFFFF;
+        background: #1E293B;
         border-radius: 12px;
-        padding: 20px 24px;
-        border: 1px solid #E8EDF2;
+        padding: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
         transition: all 0.3s ease;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
     }
 
     .schedule-card:hover {
         transform: translateY(-4px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-        border-color: #38BDF8;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        border-color: rgba(56, 189, 248, 0.2);
     }
 
     .schedule-card .route {
@@ -284,12 +298,12 @@ foreach ($schedules as $s) {
         gap: 12px;
         font-size: 18px;
         font-weight: 600;
-        color: #1A1A2E;
-        margin-bottom: 8px;
+        color: #FFFFFF;
+        margin-bottom: 10px;
     }
 
     .schedule-card .route i {
-        color: #94A3B8;
+        color: #38BDF8;
         font-size: 14px;
     }
 
@@ -298,14 +312,14 @@ foreach ($schedules as $s) {
         gap: 16px;
         flex-wrap: wrap;
         font-size: 14px;
-        color: #6B7A8A;
-        margin-bottom: 12px;
+        color: #94A3B8;
+        margin-bottom: 14px;
     }
 
     .schedule-card .bus-info span {
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: 6px;
     }
 
     .schedule-card .bus-info i {
@@ -316,21 +330,22 @@ foreach ($schedules as $s) {
     .schedule-card .time-info {
         display: flex;
         justify-content: space-between;
-        padding: 12px 0;
-        border-top: 1px solid #F1F5F9;
-        border-bottom: 1px solid #F1F5F9;
-        margin-bottom: 12px;
+        padding: 14px 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.04);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        margin-bottom: 16px;
     }
 
     .schedule-card .time-info .time {
         font-size: 14px;
-        color: #1A1A2E;
+        color: #E2E8F0;
     }
 
     .schedule-card .time-info .time span {
         display: block;
         font-size: 12px;
-        color: #94A3B8;
+        color: #64748B;
+        margin-top: 2px;
     }
 
     .schedule-card .footer-info {
@@ -340,19 +355,19 @@ foreach ($schedules as $s) {
     }
 
     .schedule-card .footer-info .price {
-        font-size: 20px;
+        font-size: 22px;
         font-weight: 700;
-        color: #2563EB;
+        color: #38BDF8;
     }
 
     .schedule-card .footer-info .price span {
         font-size: 13px;
         font-weight: 400;
-        color: #6B7A8A;
+        color: #94A3B8;
     }
 
     .schedule-card .btn-book {
-        padding: 8px 20px;
+        padding: 10px 24px;
         background: #2563EB;
         color: #FFFFFF;
         border: none;
@@ -369,12 +384,14 @@ foreach ($schedules as $s) {
     .schedule-card .btn-book:hover {
         background: #1D4ED8;
         transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
     }
 
     .schedule-card .btn-book.disabled {
         pointer-events: none;
         opacity: 0.55;
-        background: #9CA3AF;
+        background: #334155;
+        color: #94A3B8;
     }
 
     /* ===== STATUS BADGE ===== */
@@ -388,13 +405,13 @@ foreach ($schedules as $s) {
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.02em;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
     }
 
     .status-badge.available {
-        background: #D1FAE5;
-        color: #065F46;
-        border: 1px solid #A7F3D0;
+        background: rgba(52, 211, 153, 0.1);
+        color: #34D399;
+        border: 1px solid rgba(52, 211, 153, 0.2);
     }
 
     /* ===== NO SCHEDULES ===== */
@@ -408,6 +425,7 @@ foreach ($schedules as $s) {
         font-size: 48px;
         margin-bottom: 16px;
         opacity: 0.3;
+        color: #475569;
     }
 
     .no-schedules h3 {
@@ -586,7 +604,7 @@ foreach ($schedules as $s) {
                                 <span><?php echo date('d M Y', strtotime($schedule['departure_time'])); ?></span>
                             </div>
                             <div class="time" style="text-align: center;">
-                                <i class="fas fa-clock" style="color: #94A3B8;"></i>
+                                <i class="fas fa-clock" style="color: #38BDF8;"></i>
                                 <span>Departure</span>
                             </div>
                             <div class="time" style="text-align: right;">

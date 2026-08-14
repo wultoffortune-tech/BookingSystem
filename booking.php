@@ -13,21 +13,23 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 require_once 'config/database.php';
 
 // ========================================
-// FUNCTION TO GENERATE UNIQUE BOOKING CODE
+// FUNCTION TO GENERATE 8-DIGIT BOOKING CODE
 // ========================================
 function generateBookingCode($pdo)
 {
-    $prefix = 'CE';
-    $year = date('Y');
-    $month = date('m');
-    $random = strtoupper(substr(uniqid(), -5));
-    $code = $prefix . $year . $month . $random;
+    $isUnique = false;
+    $code = '';
 
-    // Check if code already exists
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM reservation WHERE booking_code = ?");
-    $stmt->execute([$code]);
-    if ($stmt->fetchColumn() > 0) {
-        $code = $prefix . $year . $month . time() . rand(10, 99);
+    while (!$isUnique) {
+        // Generate a random 8-digit number (between 10,000,000 and 99,999,999)
+        $code = str_pad(mt_rand(10000000, 99999999), 8, '0', STR_PAD_LEFT);
+
+        // Check if code already exists in the database
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM reservation WHERE booking_code = ?");
+        $stmt->execute([$code]);
+        if ($stmt->fetchColumn() == 0) {
+            $isUnique = true;
+        }
     }
     return $code;
 }
