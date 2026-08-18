@@ -40,8 +40,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['user_name'] = $user['full_name'];
             $_SESSION['user_email'] = $user['email'];
-            $_SESSION['admin_name'] = $user['full_name'];
-           
             $_SESSION['full_name'] = $user['full_name'];
             $_SESSION['user_role'] = isset($user['role']) ? $user['role'] : 'user';
             $_SESSION['logged_in'] = true;
@@ -56,14 +54,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['message'] = 'Login successful!';
             $response['role'] = $user['role'];
 
-            // ✅ FIXED: Correct redirect paths
+            // ✅ FIXED: Correct redirect paths based on role
             if ($user['role'] === 'admin') {
-                // From login folder, go up one level, then into admin folder
+                // Admin redirect
                 $response['redirect'] = '../admin/dashboard.php';
+            } elseif ($user['role'] === 'staff') {
+                // Staff redirect - check if staff record exists
+                $stmt2 = $pdo->prepare("SELECT * FROM staff WHERE user_id = ? AND status = 'active'");
+                $stmt2->execute([$user['user_id']]);
+                $staff = $stmt2->fetch();
+                
+                if ($staff) {
+                    $_SESSION['staff_logged_in'] = true;
+                    $_SESSION['staff_id'] = $staff['staff_id'];
+                    $_SESSION['staff_position'] = $staff['position'];
+                    $response['redirect'] = '../staff/staff_dashboard.php';
+                } else {
+                    // Staff record not found or inactive - redirect to home
+                    $response['redirect'] = '../home.php';
+                }
             } else {
-                $response['redirect'] = '../home.php';
+                // Regular passenger - redirect to passenger dashboard
+                $response['redirect'] = '../passenger/passenger_dashboard.php';
             }
-
 
             echo json_encode($response);
             exit();

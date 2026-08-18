@@ -3,7 +3,7 @@ session_start();
 require_once '../config/database.php';
 
 if (!isset($_SESSION['user_role']) || ($_SESSION['user_role'] != 'staff' && $_SESSION['user_role'] != 'admin')) {
-    header("Location: ../login.php");
+    header("Location: ../login/login.php");
     exit();
 }
 
@@ -12,12 +12,24 @@ $error = "";
 
 if (isset($_POST['booking_code'])) {
     $code = trim($_POST['booking_code']);
-    $stmt = $pdo->prepare("SELECT r.*, u.full_name, u.email, u.phone_number FROM reservation r JOIN users u ON r.passenger_id = u.user_id WHERE r.booking_code = ?");
+    $stmt = $pdo->prepare("SELECT r.*, u.full_name, u.email, u.phone_number,
+                            s.departure_time, s.arrival_time,
+                            rt.original_city, rt.destination,
+                            b.bus_name, b.bus_type
+                           FROM reservation r 
+                           JOIN users u ON r.passenger_id = u.user_id 
+                           JOIN schedule s ON r.schedule_id = s.schedule_id
+                           JOIN route rt ON s.route_id = rt.route_id
+                           JOIN bus b ON s.bus_id = b.bus_id
+                           WHERE r.booking_code = ?");
     $stmt->execute([$code]);
     $ticket_data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$ticket_data) $error = "❌ Invalid Ticket Code.";
-    elseif ($ticket_data['status'] !== 'confirmed') $error = "Ticket status is " . $ticket_data['status'] . ".";
+    if (!$ticket_data) {
+        $error = "❌ Invalid Ticket Code.";
+    } elseif ($ticket_data['status'] !== 'confirmed') {
+        $error = "Ticket status is " . $ticket_data['status'] . ".";
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -50,7 +62,7 @@ if (isset($_POST['booking_code'])) {
             background: #1E293B;
             padding: 40px;
             border-radius: 12px;
-            max-width: 750px;
+            max-width: 800px;
             width: 100%;
             border: 1px solid rgba(255, 255, 255, 0.04);
         }
@@ -67,7 +79,7 @@ if (isset($_POST['booking_code'])) {
         }
 
         .header h2 i {
-            color: #38BDF8;
+            color: #3B82F6;
             margin-right: 12px;
         }
 
@@ -88,32 +100,37 @@ if (isset($_POST['booking_code'])) {
             border: 1px solid rgba(255, 255, 255, 0.06);
             border-radius: 8px;
             color: #FFFFFF;
-<<<<<<< HEAD
-=======
             font-size: 15px;
->>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
             outline: none;
             transition: 0.3s;
+            font-family: 'Poppins', sans-serif;
         }
 
         .search-box input:focus {
-            border-color: #38BDF8;
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .search-box input::placeholder {
+            color: #475569;
         }
 
         .search-box button {
             padding: 14px 24px;
-            background: #38BDF8;
-            color: #0F172A;
+            background: #3B82F6;
+            color: #FFFFFF;
             border: none;
             border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
             transition: 0.3s;
+            font-family: 'Poppins', sans-serif;
         }
 
         .search-box button:hover {
-            background: #0EA5E9;
+            background: #2563EB;
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
 
         .error-msg {
@@ -128,18 +145,15 @@ if (isset($_POST['booking_code'])) {
             gap: 10px;
         }
 
-<<<<<<< HEAD
-        .ticket-card {
-            background: #0F172A;
-            padding: 25px;
-            border-radius: 8px;
-=======
+        .error-msg i {
+            font-size: 18px;
+        }
+
         /* Ticket Found Card */
         .ticket-card {
             background: #0F172A;
             padding: 25px;
             border-radius: 10px;
->>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
             margin-top: 25px;
             border: 1px solid rgba(255, 255, 255, 0.04);
         }
@@ -147,9 +161,12 @@ if (isset($_POST['booking_code'])) {
         .ticket-header {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             border-bottom: 1px solid rgba(255, 255, 255, 0.04);
             padding-bottom: 15px;
             margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .ticket-header h3 {
@@ -158,13 +175,68 @@ if (isset($_POST['booking_code'])) {
         }
 
         .status-active {
-            background: rgba(52, 211, 153, 0.06);
-            color: #34D399;
+            background: rgba(16, 185, 129, 0.06);
+            color: #10B981;
             padding: 4px 14px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: 500;
-            border: 1px solid rgba(52, 211, 153, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.1);
+        }
+
+        .status-active i {
+            margin-right: 6px;
+        }
+
+        /* Route Display in Verify */
+        .verify-route {
+            background: rgba(56, 189, 248, 0.04);
+            border: 1px solid rgba(56, 189, 248, 0.06);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .verify-route .route-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #FFFFFF;
+        }
+
+        .verify-route .route-text i {
+            color: #3B82F6;
+            margin: 0 8px;
+            font-size: 14px;
+        }
+
+        .verify-route .route-time {
+            color: #94A3B8;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .verify-route .route-time i {
+            color: #3B82F6;
+            margin-right: 4px;
+        }
+
+        .verify-bus-info {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin: 8px 0 16px;
+            flex-wrap: wrap;
+        }
+
+        .verify-bus-info span {
+            color: #94A3B8;
+            font-size: 13px;
+        }
+
+        .verify-bus-info i {
+            color: #3B82F6;
+            margin-right: 4px;
         }
 
         .ticket-grid {
@@ -182,6 +254,7 @@ if (isset($_POST['booking_code'])) {
             color: #94A3B8;
             font-size: 12px;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .ticket-item span {
@@ -192,9 +265,10 @@ if (isset($_POST['booking_code'])) {
         }
 
         .ticket-code {
-            color: #38BDF8 !important;
+            color: #3B82F6 !important;
             font-weight: 700 !important;
             font-size: 18px !important;
+            letter-spacing: 1px;
         }
 
         .action-row {
@@ -206,12 +280,8 @@ if (isset($_POST['booking_code'])) {
         }
 
         .btn-print {
-<<<<<<< HEAD
             background: #10B981;
-=======
-            background: #34D399;
->>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
-            color: #0F172A;
+            color: #FFFFFF;
             padding: 12px 20px;
             border-radius: 8px;
             text-decoration: none;
@@ -219,11 +289,13 @@ if (isset($_POST['booking_code'])) {
             flex: 1;
             text-align: center;
             transition: 0.2s;
+            font-family: 'Poppins', sans-serif;
         }
 
         .btn-print:hover {
-            background: #10B981;
+            background: #059669;
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
 
         .btn-mark {
@@ -236,11 +308,13 @@ if (isset($_POST['booking_code'])) {
             font-weight: 600;
             flex: 1;
             transition: 0.2s;
+            font-family: 'Poppins', sans-serif;
         }
 
         .btn-mark:hover {
             background: #D97706;
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
         }
 
         .footer {
@@ -249,6 +323,7 @@ if (isset($_POST['booking_code'])) {
             padding-top: 20px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
         }
 
         .back-link {
@@ -258,7 +333,12 @@ if (isset($_POST['booking_code'])) {
         }
 
         .back-link:hover {
-            color: #38BDF8;
+            color: #3B82F6;
+        }
+
+        .footer span {
+            color: #475569;
+            font-size: 13px;
         }
 
         @media (max-width: 600px) {
@@ -273,6 +353,14 @@ if (isset($_POST['booking_code'])) {
             .action-row {
                 flex-direction: column;
             }
+
+            .container {
+                padding: 25px;
+            }
+
+            .verify-route .route-text {
+                font-size: 15px;
+            }
         }
     </style>
 </head>
@@ -283,62 +371,91 @@ if (isset($_POST['booking_code'])) {
             <h2><i class="fa-solid fa-check-circle"></i> Verify Ticket</h2>
             <p>Enter the 8-digit code to validate a passenger's booking</p>
         </div>
+
         <form method="POST">
             <div class="search-box">
-<<<<<<< HEAD
                 <input type="text" name="booking_code" placeholder="e.g. 80451233" required>
-=======
-                <input type="text" name="ticket_code" placeholder="e.g. 710F483250316" required>
->>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
                 <button type="submit"><i class="fa-solid fa-magnifying-glass"></i> Verify</button>
             </div>
         </form>
-        <?php if ($error): ?><div class="error-msg"><i class="fa-solid fa-circle-exclamation"></i> <?php echo $error; ?></div><?php endif; ?>
-<<<<<<< HEAD
-=======
 
->>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
+        <?php if ($error): ?>
+            <div class="error-msg">
+                <i class="fa-solid fa-circle-exclamation"></i> <?php echo $error; ?>
+            </div>
+        <?php endif; ?>
+
         <?php if ($ticket_data): ?>
             <div class="ticket-card">
                 <div class="ticket-header">
-                    <h3>Booking Details</h3><span class="status-active"><i class="fa-regular fa-circle-check"></i> <?php echo ucfirst($ticket_data['status']); ?></span>
+                    <h3>Booking Details</h3>
+                    <span class="status-active">
+                        <i class="fa-regular fa-circle-check"></i> <?php echo ucfirst($ticket_data['status']); ?>
+                    </span>
                 </div>
+
+                <!-- ===== ROUTE DISPLAY ===== -->
+                <div class="verify-route">
+                    <div class="route-text">
+                        <?php echo htmlspecialchars($ticket_data['original_city']); ?>
+                        <i class="fas fa-arrow-right"></i>
+                        <?php echo htmlspecialchars($ticket_data['destination']); ?>
+                    </div>
+                    <div class="route-time">
+                        <i class="fas fa-calendar-alt"></i> <?php echo date('d M Y', strtotime($ticket_data['departure_time'])); ?>
+                        &nbsp;|&nbsp;
+                        <i class="fas fa-clock"></i> <?php echo date('H:i', strtotime($ticket_data['departure_time'])); ?>
+                        &nbsp;→&nbsp;
+                        <i class="fas fa-clock"></i> <?php echo date('H:i', strtotime($ticket_data['arrival_time'])); ?>
+                    </div>
+                </div>
+
+                <!-- ===== BUS INFO ===== -->
+                <div class="verify-bus-info">
+                    <span><i class="fas fa-bus"></i> <?php echo htmlspecialchars($ticket_data['bus_name']); ?></span>
+                    <span><i class="fas fa-tag"></i> <?php echo htmlspecialchars($ticket_data['bus_type']); ?></span>
+                </div>
+
                 <div class="ticket-grid">
-<<<<<<< HEAD
-                    <div class="ticket-item"><strong>Code</strong><span class="ticket-code"><?php echo $ticket_data['booking_code']; ?></span></div>
-                    <div class="ticket-item"><strong>Passenger</strong><span><?php echo $ticket_data['full_name']; ?></span></div>
-                    <div class="ticket-item"><strong>Email</strong><span><?php echo $ticket_data['email']; ?></span></div>
-                    <div class="ticket-item"><strong>Phone</strong><span><?php echo $ticket_data['phone_number']; ?></span></div>
-                    <div class="ticket-item"><strong>Seat</strong><span><?php echo $ticket_data['seat_number']; ?></span></div>
-                    <div class="ticket-item"><strong>Fare</strong><span>XAF <?php echo number_format($ticket_data['fare_paid'], 0); ?></span></div>
+                    <div class="ticket-item">
+                        <strong>Code</strong>
+                        <span class="ticket-code"><?php echo $ticket_data['booking_code']; ?></span>
+                    </div>
+                    <div class="ticket-item">
+                        <strong>Passenger</strong>
+                        <span><?php echo htmlspecialchars($ticket_data['full_name']); ?></span>
+                    </div>
+                    <div class="ticket-item">
+                        <strong>Email</strong>
+                        <span><?php echo htmlspecialchars($ticket_data['email']); ?></span>
+                    </div>
+                    <div class="ticket-item">
+                        <strong>Phone</strong>
+                        <span><?php echo htmlspecialchars($ticket_data['phone_number']); ?></span>
+                    </div>
+                    <div class="ticket-item">
+                        <strong>Seat</strong>
+                        <span><?php echo htmlspecialchars($ticket_data['seat_number']); ?></span>
+                    </div>
+                    <div class="ticket-item">
+                        <strong>Fare</strong>
+                        <span>XAF <?php echo number_format($ticket_data['fare_paid'], 0); ?></span>
+                    </div>
                 </div>
                 <div class="action-row">
-                    <a href="staff_print_ticket.php?id=<?php echo $ticket_data['reservation_id']; ?>" target="_blank" class="btn-print"><i class="fa-solid fa-print"></i> Print Ticket</a>
+                    <a href="staff_print_ticket.php?id=<?php echo $ticket_data['reservation_id']; ?>" target="_blank" class="btn-print">
+                        <i class="fa-solid fa-print"></i> Print Ticket
+                    </a>
                 </div>
             </div>
         <?php endif; ?>
-        <div class="footer"><a href="staff_dashboard.php" class="back-link"><i class="fa-solid fa-arrow-left"></i> Dashboard</a></div>
-=======
-                    <div class="ticket-item"><strong>Code</strong><span class="ticket-code"><?php echo $ticket_data['ticket_code']; ?></span></div>
-                    <div class="ticket-item"><strong>Passenger</strong><span><?php echo $ticket_data['customer_name']; ?></span></div>
-                    <div class="ticket-item"><strong>Phone</strong><span><?php echo $ticket_data['customer_phone']; ?></span></div>
-                    <div class="ticket-item"><strong>Route</strong><span><?php echo $ticket_data['route']; ?></span></div>
-                    <div class="ticket-item"><strong>Date</strong><span><?php echo $ticket_data['travel_date']; ?></span></div>
-                    <div class="ticket-item"><strong>Seat</strong><span><?php echo $ticket_data['seat_number']; ?></span></div>
-                </div>
-                <div class="action-row">
-                    <a href="staff_print_ticket.php?id=<?php echo $ticket_data['id']; ?>" target="_blank" class="btn-print"><i class="fa-solid fa-print"></i> Print Ticket</a>
-                    <form method="POST" action="staff_mark_used.php" style="flex:1;">
-                        <input type="hidden" name="ticket_id" value="<?php echo $ticket_data['id']; ?>">
-                        <button type="submit" class="btn-mark"><i class="fa-solid fa-check"></i> Mark Used</button>
-                    </form>
-                </div>
-            </div>
-        <?php endif; ?>
+
         <div class="footer">
-            <a href="staff_dashboard.php" class="back-link"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+            <a href="staff_dashboard.php" class="back-link">
+                <i class="fa-solid fa-arrow-left"></i> Dashboard
+            </a>
+            <span>Logged in as Staff</span>
         </div>
->>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
     </div>
 </body>
 

@@ -126,8 +126,12 @@ document.addEventListener("DOMContentLoaded", function () {
               if (data.redirect) {
                 window.location.href = data.redirect;
               } else {
-                // Fallback redirect
-                window.location.href = "../home.php";
+                // Fallback redirect based on role
+                if (data.role === "admin" || data.role === "staff") {
+                  window.location.href = "../staff/staff_dashboard.php";
+                } else {
+                  window.location.href = "../passenger/passenger_dashboard.php";
+                }
               }
             }, 1500);
           } else {
@@ -265,5 +269,8 @@ document.addEventListener("DOMContentLoaded", function () {
   // ========================================
   console.log("🚌 CamExpress Login loaded successfully");
   console.log("📌 Press Enter to submit the form");
-  console.log("🔑 Demo: admin@camexpress.cm / Admin123");
+  console.log("🔑 Demo accounts:");
+  console.log("   Admin: admin@camexpress.cm / Admin123");
+  console.log("   Staff: staff@camexpress.cm / Staff123");
+  console.log("   User: user@camexpress.cm / User123");
 });
