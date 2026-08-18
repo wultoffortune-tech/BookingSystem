@@ -15,7 +15,7 @@ require_once 'config/database.php';
 $user_id = $_SESSION['user_id'];
 
 // ========================================
-// HANDLE CANCELLATION - Set status to cancelled + Release seat
+// HANDLE CANCELLATION
 // ========================================
 if (isset($_GET['cancel']) && is_numeric($_GET['cancel'])) {
     $reservation_id = (int)$_GET['cancel'];
@@ -34,7 +34,8 @@ if (isset($_GET['cancel']) && is_numeric($_GET['cancel'])) {
                 $_SESSION['cancel_type'] = 'error';
             } else {
                 // 1. Update status to cancelled + mark seat as released
-                $stmt = $pdo->prepare("UPDATE reservation SET status = 'cancelled', seats_released = 1, cancelled_at = NOW() WHERE reservation_id = ? AND passenger_id = ?");
+                // REMOVED: 'cancelled_at = NOW()' to prevent column-not-found crashes
+                $stmt = $pdo->prepare("UPDATE reservation SET status = 'cancelled', seats_released = 1 WHERE reservation_id = ? AND passenger_id = ?");
                 $stmt->execute([$reservation_id, $user_id]);
 
                 // 2. Increase available seats back - only if not already released
@@ -55,7 +56,8 @@ if (isset($_GET['cancel']) && is_numeric($_GET['cancel'])) {
     } catch (PDOException $e) {
         $pdo->rollBack();
         error_log("Cancellation error: " . $e->getMessage());
-        $_SESSION['cancel_message'] = '❌ Unable to cancel the booking. Please try again.';
+        // Show the actual error for debugging
+        $_SESSION['cancel_message'] = '❌ Database Error: ' . $e->getMessage();
         $_SESSION['cancel_type'] = 'error';
     }
 
@@ -64,7 +66,7 @@ if (isset($_GET['cancel']) && is_numeric($_GET['cancel'])) {
 }
 
 // ========================================
-// HANDLE DELETE - Permanently delete cancelled ticket ONLY if seat released
+// HANDLE DELETE
 // ========================================
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     $reservation_id = (int)$_GET['delete'];
@@ -114,11 +116,11 @@ $stmt->execute([$user_id]);
 $bookings = $stmt->fetchAll();
 
 // Get message if any
-// Get message if any
 $cancel_message = isset($_SESSION['cancel_message']) ? $_SESSION['cancel_message'] : '';
 $cancel_type = isset($_SESSION['cancel_type']) ? $_SESSION['cancel_type'] : '';
 unset($_SESSION['cancel_message']);
 unset($_SESSION['cancel_type']);
+
 // Count bookings by status
 $total_bookings = count($bookings);
 $pending = $confirmed = $cancelled = 0;

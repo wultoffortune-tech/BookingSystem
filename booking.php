@@ -13,21 +13,23 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 require_once 'config/database.php';
 
 // ========================================
-// FUNCTION TO GENERATE UNIQUE BOOKING CODE
+// FUNCTION TO GENERATE 8-DIGIT BOOKING CODE
 // ========================================
 function generateBookingCode($pdo)
 {
-    $prefix = 'CE';
-    $year = date('Y');
-    $month = date('m');
-    $random = strtoupper(substr(uniqid(), -5));
-    $code = $prefix . $year . $month . $random;
+    $isUnique = false;
+    $code = '';
 
-    // Check if code already exists
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM reservation WHERE booking_code = ?");
-    $stmt->execute([$code]);
-    if ($stmt->fetchColumn() > 0) {
-        $code = $prefix . $year . $month . time() . rand(10, 99);
+    while (!$isUnique) {
+        // Generate a random 8-digit number (between 10,000,000 and 99,999,999)
+        $code = str_pad(mt_rand(10000000, 99999999), 8, '0', STR_PAD_LEFT);
+
+        // Check if code already exists in the database
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM reservation WHERE booking_code = ?");
+        $stmt->execute([$code]);
+        if ($stmt->fetchColumn() == 0) {
+            $isUnique = true;
+        }
     }
     return $code;
 }
@@ -40,18 +42,39 @@ if ($schedule_id <= 0) {
     exit();
 }
 
-// ✅ FIXED: Removed r.reservation_date - using only columns that exist
-$stmt = $pdo->prepare("SELECT s.*, 
-                       r.original_city, r.destination, r.base_fare,
-                       b.bus_name, b.bus_type, b.total_seats
-                       FROM schedule s
-                       JOIN route r ON s.route_id = r.route_id
-                       JOIN bus b ON s.bus_id = b.bus_id
-                       WHERE s.schedule_id = ? AND s.expired = 0");
-$stmt->execute([$schedule_id]);
-$schedule = $stmt->fetch();
+// VERIFY SCHEDULE EXISTS FIRST - Check both possible table names
+try {
+    // First check if schedule exists in the 'schedule' table
+    $stmt = $pdo->prepare("SELECT s.*, 
+                           r.original_city, r.destination, r.base_fare,
+                           b.bus_name, b.bus_type, b.total_seats
+                           FROM schedule s
+                           JOIN route r ON s.route_id = r.route_id
+                           JOIN bus b ON s.bus_id = b.bus_id
+                           WHERE s.schedule_id = ? AND s.expired = 0");
+    $stmt->execute([$schedule_id]);
+    $schedule = $stmt->fetch();
+
+    // If not found, try 'schedules' table
+    if (!$schedule) {
+        $stmt = $pdo->prepare("SELECT s.*, 
+                               r.original_city, r.destination, r.base_fare,
+                               b.bus_name, b.bus_type, b.total_seats
+                               FROM schedules s
+                               JOIN route r ON s.route_id = r.route_id
+                               JOIN bus b ON s.bus_id = b.bus_id
+                               WHERE s.schedule_id = ? AND s.expired = 0");
+        $stmt->execute([$schedule_id]);
+        $schedule = $stmt->fetch();
+    }
+} catch (PDOException $e) {
+    error_log("Schedule fetch error: " . $e->getMessage());
+    header('Location: schedule.php');
+    exit();
+}
 
 if (!$schedule) {
+    $_SESSION['error_message'] = 'Schedule not found or has expired.';
     header('Location: schedule.php');
     exit();
 }
@@ -61,6 +84,11 @@ $user_id = $_SESSION['user_id'];
 $stmt = $pdo->prepare("SELECT * FROM users WHERE user_id = ?");
 $stmt->execute([$user_id]);
 $user = $stmt->fetch();
+
+if (!$user) {
+    header('Location: login/login.php');
+    exit();
+}
 
 $error = '';
 $success = '';
@@ -97,65 +125,104 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'This seat was just taken. Please choose another seat.';
                 $pdo->rollBack();
             } else {
-                // ✅ Check if booking_code column exists
-                $hasBookingCode = false;
-                try {
-                    $stmt = $pdo->query("SHOW COLUMNS FROM reservation LIKE 'booking_code'");
-                    if ($stmt->fetch()) {
-                        $hasBookingCode = true;
-                    }
-                } catch (PDOException $e) {
-                    // Column doesn't exist, skip
-                }
+                // Verify schedule still exists and has available seats
+                // Try both table names
+                $schedule_check = null;
 
-                // ✅ Check if seats_released column exists
-                $hasSeatsReleased = false;
-                try {
-                    $stmt = $pdo->query("SHOW COLUMNS FROM reservation LIKE 'seats_released'");
-                    if ($stmt->fetch()) {
-                        $hasSeatsReleased = true;
-                    }
-                } catch (PDOException $e) {
-                    // Column doesn't exist, skip
-                }
-
-                // ✅ Insert with seats_released = 0 for new bookings
-                if ($hasBookingCode && $hasSeatsReleased) {
-                    $booking_code = generateBookingCode($pdo);
-                    $stmt = $pdo->prepare("INSERT INTO reservation 
-                                           (booking_code, passenger_id, schedule_id, seat_number, fare_paid, status, seats_released) 
-                                           VALUES (?, ?, ?, ?, ?, 'pending', 0)");
-                    $stmt->execute([$booking_code, $user_id, $schedule_id, $seat_number, $display_price]);
-                } elseif ($hasBookingCode) {
-                    $booking_code = generateBookingCode($pdo);
-                    $stmt = $pdo->prepare("INSERT INTO reservation 
-                                           (booking_code, passenger_id, schedule_id, seat_number, fare_paid, status) 
-                                           VALUES (?, ?, ?, ?, 'pending')");
-                    $stmt->execute([$booking_code, $user_id, $schedule_id, $seat_number, $display_price]);
-                } else {
-                    $stmt = $pdo->prepare("INSERT INTO reservation 
-                                           (passenger_id, schedule_id, seat_number, fare_paid, status) 
-                                           VALUES (?, ?, 'pending')");
-                    $stmt->execute([$user_id, $schedule_id, $seat_number, $display_price]);
-                }
-
-                $reservation_id = $pdo->lastInsertId();
-
-                // Update available seats
-                $stmt = $pdo->prepare("UPDATE schedule SET available_seats = available_seats - 1 
-                                       WHERE schedule_id = ? AND available_seats > 0");
+                // Try 'schedule' table first
+                $stmt = $pdo->prepare("SELECT schedule_id, available_seats FROM schedule WHERE schedule_id = ? AND expired = 0 AND available_seats > 0 FOR UPDATE");
                 $stmt->execute([$schedule_id]);
+                $schedule_check = $stmt->fetch();
 
-                $pdo->commit();
+                // If not found, try 'schedules' table
+                if (!$schedule_check) {
+                    $stmt = $pdo->prepare("SELECT schedule_id, available_seats FROM schedules WHERE schedule_id = ? AND expired = 0 AND available_seats > 0 FOR UPDATE");
+                    $stmt->execute([$schedule_id]);
+                    $schedule_check = $stmt->fetch();
+                }
 
-                // Redirect to payment
-                header('Location: payment.php?reservation_id=' . $reservation_id);
-                exit();
+                if (!$schedule_check) {
+                    $error = 'Schedule is no longer available or has no seats left.';
+                    $pdo->rollBack();
+                } else {
+                    // Generate booking code
+                    $booking_code = generateBookingCode($pdo);
+
+                    // Check what columns exist in reservation table
+                    $columns = [];
+                    try {
+                        $stmt = $pdo->query("SHOW COLUMNS FROM reservation");
+                        while ($col = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                            $columns[] = $col['Field'];
+                        }
+                    } catch (PDOException $e) {
+                        error_log("Column check error: " . $e->getMessage());
+                    }
+
+                    // Build INSERT query based on existing columns
+                    $insertFields = ['passenger_id', 'schedule_id', 'seat_number', 'fare_paid', 'status'];
+                    $insertValues = [$user_id, $schedule_id, $seat_number, $display_price, 'pending'];
+                    $placeholders = ['?', '?', '?', '?', '?'];
+
+                    // Check if booking_code column exists
+                    if (in_array('booking_code', $columns)) {
+                        $insertFields[] = 'booking_code';
+                        $insertValues[] = $booking_code;
+                        $placeholders[] = '?';
+                    }
+
+                    // Check if seats_released column exists
+                    if (in_array('seats_released', $columns)) {
+                        $insertFields[] = 'seats_released';
+                        $insertValues[] = 0;
+                        $placeholders[] = '?';
+                    }
+
+                    // Check if created_at column exists
+                    if (in_array('created_at', $columns)) {
+                        $insertFields[] = 'created_at';
+                        $insertValues[] = date('Y-m-d H:i:s');
+                        $placeholders[] = '?';
+                    }
+
+                    // Build the final query
+                    $sql = "INSERT INTO reservation (" . implode(', ', $insertFields) . ") 
+                            VALUES (" . implode(', ', $placeholders) . ")";
+
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->execute($insertValues);
+
+                    $reservation_id = $pdo->lastInsertId();
+
+                    // Update available seats - try both tables
+                    $stmt = $pdo->prepare("UPDATE schedule SET available_seats = available_seats - 1 
+                                           WHERE schedule_id = ? AND available_seats > 0");
+                    $stmt->execute([$schedule_id]);
+
+                    // If no rows affected, try 'schedules' table
+                    if ($stmt->rowCount() == 0) {
+                        $stmt = $pdo->prepare("UPDATE schedules SET available_seats = available_seats - 1 
+                                               WHERE schedule_id = ? AND available_seats > 0");
+                        $stmt->execute([$schedule_id]);
+                    }
+
+                    $pdo->commit();
+
+                    // Redirect to payment
+                    header('Location: payment.php?reservation_id=' . $reservation_id);
+                    exit();
+                }
             }
         } catch (PDOException $e) {
             $pdo->rollBack();
             error_log("Booking error: " . $e->getMessage());
-            $error = 'Unable to complete the reservation. Please try again.';
+
+            // Check for specific foreign key errors
+            if (strpos($e->getMessage(), 'foreign key constraint fails') !== false) {
+                $error = 'Schedule reference error. The selected bus schedule may have been removed or the schedule_id is invalid.';
+            } else {
+                $error = 'Unable to complete the reservation. Please try again. Error: ' . $e->getMessage();
+            }
         }
     }
 }
@@ -445,6 +512,9 @@ include 'includes/header.php';
         display: flex;
         align-items: center;
         gap: 10px;
+        max-width: 1100px;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .error-box i {
