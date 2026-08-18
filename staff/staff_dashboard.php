@@ -7,6 +7,7 @@ if (!isset($_SESSION['user_role']) || ($_SESSION['user_role'] != 'staff' && $_SE
     exit();
 }
 
+<<<<<<< HEAD
 $stats = [];
 
 // Total bookings
@@ -29,6 +30,32 @@ $stmt = $pdo->prepare("SELECT r.*, u.full_name
 $stmt->execute();
 $recent_bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+=======
+// Get Statistics for Staff
+$stats = [];
+
+// Total bookings
+$stmt = $pdo->prepare("SELECT COUNT(*) as total FROM bookings");
+$stmt->execute();
+$stats['total_bookings'] = $stmt->fetchColumn();
+
+// Active tickets
+$stmt = $pdo->prepare("SELECT COUNT(*) as total FROM bookings WHERE status = 'active'");
+$stmt->execute();
+$stats['active_tickets'] = $stmt->fetchColumn();
+
+// Used tickets
+$stmt = $pdo->prepare("SELECT COUNT(*) as total FROM bookings WHERE status = 'used'");
+$stmt->execute();
+$stats['used_tickets'] = $stmt->fetchColumn();
+
+// Recent bookings
+$stmt = $pdo->prepare("SELECT * FROM bookings ORDER BY created_at DESC LIMIT 5");
+$stmt->execute();
+$recent_bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Get Staff Name
+>>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
 $staff_name = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : 'Staff';
 ?>
 <!DOCTYPE html>
@@ -36,10 +63,15 @@ $staff_name = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : 'Staff';
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Staff Dashboard - CamExpress</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
+<<<<<<< HEAD
+=======
+        /* ===== RESET ===== */
+>>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
         * {
             margin: 0;
             padding: 0;
@@ -53,6 +85,10 @@ $staff_name = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : 'Staff';
             min-height: 100vh;
         }
 
+<<<<<<< HEAD
+=======
+        /* ===== STAFF HEADER ===== */
+>>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
         .staff-header {
             background: #1E293B;
             padding: 16px 32px;
@@ -63,6 +99,7 @@ $staff_name = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : 'Staff';
             position: sticky;
             top: 0;
             z-index: 100;
+<<<<<<< HEAD
         }
 
         .staff-header .logo {
@@ -269,6 +306,221 @@ $staff_name = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : 'Staff';
             border-bottom: 1px solid rgba(255, 255, 255, 0.04);
         }
 
+=======
+        }
+
+        .staff-header .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #38BDF8;
+            text-decoration: none;
+        }
+
+        .staff-header .staff-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .staff-header .staff-info span {
+            color: #94A3B8;
+            font-size: 14px;
+        }
+
+        .staff-header .staff-info span i {
+            color: #38BDF8;
+            margin-right: 6px;
+        }
+
+        .staff-header .staff-info .logout-btn {
+            padding: 8px 20px;
+            background: rgba(239, 68, 68, 0.06);
+            color: #EF4444;
+            border: 1px solid rgba(239, 68, 68, 0.06);
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        .staff-header .staff-info .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.12);
+        }
+
+        /* ===== STAFF CONTAINER ===== */
+        .staff-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* ===== WELCOME SECTION ===== */
+        .welcome-section {
+            margin-bottom: 32px;
+        }
+
+        .welcome-section h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #FFFFFF;
+        }
+
+        .welcome-section h1 span {
+            color: #38BDF8;
+        }
+
+        .welcome-section .subtitle {
+            color: #94A3B8;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        /* ===== STATS GRID ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: #1E293B;
+            padding: 20px 24px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: rgba(56, 189, 248, 0.10);
+            transform: translateY(-2px);
+        }
+
+        .stat-card .stat-icon {
+            font-size: 20px;
+            margin-bottom: 6px;
+        }
+
+        .stat-card .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #FFFFFF;
+        }
+
+        .stat-card .stat-label {
+            font-size: 13px;
+            color: #94A3B8;
+            margin-top: 4px;
+        }
+
+        /* Stat Colors */
+        .stat-card.blue .stat-icon {
+            color: #38BDF8;
+        }
+
+        .stat-card.green .stat-icon {
+            color: #34D399;
+        }
+
+        .stat-card.orange .stat-icon {
+            color: #F59E0B;
+        }
+
+        /* ===== STAFF ACTIONS ===== */
+        .staff-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 32px;
+        }
+
+        .staff-actions a {
+            padding: 12px 24px;
+            background: #1E293B;
+            color: #FFFFFF;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .staff-actions a:hover {
+            background: #38BDF8;
+            border-color: #38BDF8;
+            transform: translateY(-2px);
+        }
+
+        .staff-actions a.primary {
+            background: #38BDF8;
+            border-color: #38BDF8;
+        }
+
+        .staff-actions a.primary:hover {
+            background: #0EA5E9;
+            border-color: #0EA5E9;
+        }
+
+        .staff-actions a.green {
+            background: #34D399;
+            border-color: #34D399;
+        }
+
+        .staff-actions a.green:hover {
+            background: #10B981;
+            border-color: #10B981;
+        }
+
+        /* ===== RECENT BOOKINGS (STAFF VIEW) ===== */
+        .recent-section {
+            background: #1E293B;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            padding: 24px;
+        }
+
+        .recent-section .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .recent-section .section-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #FFFFFF;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        table th {
+            text-align: left;
+            padding: 12px 16px;
+            color: #94A3B8;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+>>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
         table td {
             padding: 12px 16px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.02);
@@ -285,14 +537,31 @@ $staff_name = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : 'Staff';
             font-weight: 500;
         }
 
+<<<<<<< HEAD
         .badge-confirmed {
             background: rgba(52, 211, 153, 0.06);
             color: #34D399;
+=======
+        .badge-active {
+            background: rgba(52, 211, 153, 0.06);
+            color: #34D399;
+            border: 1px solid rgba(52, 211, 153, 0.06);
+        }
+
+        .badge-used {
+            background: rgba(56, 189, 248, 0.06);
+            color: #38BDF8;
+            border: 1px solid rgba(56, 189, 248, 0.06);
+>>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
         }
 
         .badge-cancelled {
             background: rgba(239, 68, 68, 0.06);
             color: #EF4444;
+<<<<<<< HEAD
+=======
+            border: 1px solid rgba(239, 68, 68, 0.06);
+>>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
         }
 
         .no-data {
@@ -307,6 +576,10 @@ $staff_name = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : 'Staff';
             opacity: 0.3;
         }
 
+<<<<<<< HEAD
+=======
+        /* Responsive */
+>>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
         @media (max-width: 768px) {
             .staff-header {
                 padding: 12px 16px;
@@ -345,18 +618,38 @@ $staff_name = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : 'Staff';
 </head>
 
 <body>
+<<<<<<< HEAD
     <header class="staff-header">
         <a href="staff_dashboard.php" class="logo"><i class="fas fa-bus"></i> <span>CamExpress Staff</span></a>
+=======
+
+    <!-- ===== STAFF HEADER ===== -->
+    <header class="staff-header">
+        <a href="staff_dashboard.php" class="logo">
+            <i class="fas fa-bus"></i>
+            <span>CamExpress Staff</span>
+        </a>
+>>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
         <div class="staff-info">
             <span><i class="fas fa-user"></i> <?php echo htmlspecialchars($staff_name); ?></span>
             <a href="staff_logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </div>
     </header>
+<<<<<<< HEAD
+=======
+
+    <!-- ===== STAFF CONTENT ===== -->
+>>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
     <div class="staff-container">
         <div class="welcome-section">
             <h1>Welcome back, <span><?php echo htmlspecialchars($staff_name); ?></span>!</h1>
             <p class="subtitle">Manage passenger bookings and validate tickets.</p>
         </div>
+<<<<<<< HEAD
+=======
+
+        <!-- ===== STATS ===== -->
+>>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
         <div class="stats-grid">
             <div class="stat-card blue">
                 <div class="stat-icon"><i class="fas fa-ticket-alt"></i></div>
@@ -370,24 +663,47 @@ $staff_name = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : 'Staff';
             </div>
             <div class="stat-card orange">
                 <div class="stat-icon"><i class="fas fa-history"></i></div>
+<<<<<<< HEAD
                 <div class="stat-number"><?php echo $stats['cancelled_tickets']; ?></div>
                 <div class="stat-label">Cancelled Tickets</div>
             </div>
         </div>
+=======
+                <div class="stat-number"><?php echo $stats['used_tickets']; ?></div>
+                <div class="stat-label">Used Tickets</div>
+            </div>
+        </div>
+
+        <!-- ===== STAFF ACTIONS ===== -->
+>>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
         <div class="staff-actions">
             <a href="staff_create_booking.php" class="primary"><i class="fas fa-user-plus"></i> Assist Booking</a>
             <a href="staff_verify_ticket.php" class="green"><i class="fas fa-check-circle"></i> Verify Ticket</a>
         </div>
+<<<<<<< HEAD
         <div class="recent-section">
             <div class="section-header">
                 <h2><i class="fas fa-clock" style="color:#38BDF8; margin-right:8px;"></i> Recent Bookings</h2>
             </div>
+=======
+
+        <!-- ===== RECENT BOOKINGS ===== -->
+        <div class="recent-section">
+            <div class="section-header">
+                <h2><i class="fas fa-clock" style="color: #38BDF8; margin-right: 8px;"></i> Recent Bookings</h2>
+            </div>
+
+>>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
             <?php if (count($recent_bookings) > 0): ?>
                 <div class="table-responsive">
                     <table>
                         <thead>
                             <tr>
                                 <th>Passenger</th>
+<<<<<<< HEAD
+=======
+                                <th>Route</th>
+>>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
                                 <th>Seat</th>
                                 <th>Code</th>
                                 <th>Status</th>
@@ -396,18 +712,36 @@ $staff_name = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : 'Staff';
                         <tbody>
                             <?php foreach ($recent_bookings as $booking): ?>
                                 <tr>
+<<<<<<< HEAD
                                     <td><strong><?php echo htmlspecialchars($booking['full_name']); ?></strong></td>
                                     <td><?php echo htmlspecialchars($booking['seat_number']); ?></td>
                                     <td style="font-weight:600;color:#38BDF8;"><?php echo htmlspecialchars($booking['booking_code']); ?></td>
                                     <td><span class="badge badge-<?php echo $booking['status']; ?>"><?php echo ucfirst($booking['status']); ?></span></td>
+=======
+                                    <td><strong><?php echo htmlspecialchars($booking['customer_name']); ?></strong></td>
+                                    <td><?php echo htmlspecialchars($booking['route']); ?></td>
+                                    <td><?php echo htmlspecialchars($booking['seat_number']); ?></td>
+                                    <td style="font-weight: 600; color: #38BDF8;"><?php echo htmlspecialchars($booking['ticket_code']); ?></td>
+                                    <td>
+                                        <span class="badge badge-<?php echo $booking['status']; ?>">
+                                            <?php echo ucfirst($booking['status']); ?>
+                                        </span>
+                                    </td>
+>>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
             <?php else: ?>
+<<<<<<< HEAD
                 <div class="no-data"><i class="fas fa-inbox"></i>
                     <p>No bookings yet.</p>
+=======
+                <div class="no-data">
+                    <i class="fas fa-inbox"></i>
+                    <p>No bookings yet. Assist a passenger to create a booking!</p>
+>>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
                 </div>
             <?php endif; ?>
         </div>

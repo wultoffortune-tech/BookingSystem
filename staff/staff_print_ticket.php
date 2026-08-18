@@ -75,18 +75,31 @@ if (!$ticket) {
 <body>
     <div class="ticket-box">
         <div class="logo">CamExpress</div>
+<<<<<<< HEAD
         <div class="code"><?php echo $ticket['booking_code']; ?></div>
+=======
+        <div class="code"><?php echo $ticket['ticket_code']; ?></div>
+>>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
         <hr>
         <p><strong>Name:</strong> <?php echo $ticket['full_name']; ?></p>
         <p><strong>Email:</strong> <?php echo $ticket['email']; ?></p>
         <p><strong>Phone:</strong> <?php echo $ticket['phone_number']; ?></p>
         <p><strong>Seat:</strong> <?php echo $ticket['seat_number']; ?></p>
+<<<<<<< HEAD
         <p><strong>Fare:</strong> XAF <?php echo number_format($ticket['fare_paid'], 0); ?></p>
         <hr>
         <small>Thank you for riding with CamExpress!</small>
     </div>
     <br>
     <button class="no-print" onclick="window.print()" style="background:#38BDF8; color:#0F172A; border:none; padding:10px 20px; border-radius:5px; cursor:pointer;">🖨️ Print</button>
+=======
+        <hr>
+        <small>Thank you for riding!</small>
+    </div>
+    <br>
+    <button class="no-print" onclick="window.print()" style="background:#7c5cff; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer;">🖨️ Print</button>
+    <button class="no-print" onclick="window.close()" style="background:#6b7280; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer;">Close</button>
+>>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
 </body>
 
 </html>

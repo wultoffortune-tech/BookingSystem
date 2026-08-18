@@ -8,6 +8,7 @@ if (!isset($_SESSION['user_role']) || ($_SESSION['user_role'] != 'staff' && $_SE
 }
 
 $message = "";
+<<<<<<< HEAD
 
 // Fetch the first valid schedule ID automatically
 $stmt = $pdo->query("SELECT schedule_id FROM schedule WHERE expired = 0 AND available_seats > 0 LIMIT 1");
@@ -52,6 +53,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $pdo->rollBack();
         error_log("Staff booking error: " . $e->getMessage());
         $message = "<div style='background:rgba(239,68,68,0.06); color:#EF4444; padding:15px; border-radius:10px; border:1px solid rgba(239,68,68,0.1); margin-bottom:20px;'>❌ Database Error: " . $e->getMessage() . "</div>";
+=======
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $ticket_code = strtoupper(substr(md5(uniqid(rand(), true)), 0, 8));
+    $stmt = $pdo->prepare("INSERT INTO bookings (customer_name, customer_phone, route, travel_date, seat_number, ticket_code, created_by_user_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
+
+    if ($stmt->execute([$_POST['customer_name'], $_POST['customer_phone'], $_POST['route'], $_POST['travel_date'], $_POST['seat_number'], $ticket_code, $_SESSION['user_id']])) {
+        $message = "<div style='background:rgba(52,211,153,0.06); color:#34D399; padding:15px; border-radius:10px; border:1px solid rgba(52,211,153,0.1); margin-bottom:20px;'>✅ Booking Successful! Ticket Code: <strong>$ticket_code</strong></div>";
+    } else {
+        $message = "<div style='background:rgba(239,68,68,0.06); color:#EF4444; padding:15px; border-radius:10px; border:1px solid rgba(239,68,68,0.1); margin-bottom:20px;'>❌ Error creating booking.</div>";
+>>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
     }
 }
 ?>
@@ -133,8 +144,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             font-size: 13px;
         }
 
+<<<<<<< HEAD
         .form-group input,
         .form-group select {
+=======
+        .form-group input {
+>>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
             padding: 14px 16px;
             background: #0F172A;
             border: 1px solid rgba(255, 255, 255, 0.06);
@@ -144,15 +159,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             width: 100%;
             outline: none;
             transition: 0.3s;
+<<<<<<< HEAD
             font-family: 'Poppins', sans-serif;
         }
 
         .form-group input:focus,
         .form-group select:focus {
+=======
+        }
+
+        .form-group input:focus {
+>>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
             border-color: #38BDF8;
             background: #0F172A;
         }
 
+<<<<<<< HEAD
         .form-group input::placeholder,
         .form-group select::placeholder {
             color: #475569;
@@ -163,6 +185,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             color: #FFFFFF;
         }
 
+=======
+        .form-group input::placeholder {
+            color: #475569;
+        }
+
+>>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
         .btn-submit {
             background: #38BDF8;
             color: #0F172A;
@@ -219,11 +247,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="form-container">
         <div class="header">
             <h2><i class="fa-solid fa-pen-to-square"></i> Assist Booking</h2>
+<<<<<<< HEAD
             <p>Select a trip, enter passenger details, and generate a ticket.</p>
+=======
+            <p>Enter passenger details to generate a new ticket</p>
+>>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
         </div>
         <?php echo $message; ?>
         <form method="POST">
             <div class="form-grid">
+<<<<<<< HEAD
                 <div class="form-group"><label>Full Name</label><input type="text" name="full_name" placeholder="Passenger Name" required></div>
                 <div class="form-group"><label>Email Address</label><input type="email" name="email" placeholder="passenger@example.com" required></div>
                 <div class="form-group"><label>Phone Number</label><input type="text" name="phone_number" placeholder="+237 675431233" required></div>
@@ -245,6 +278,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         }
                         ?>
                     </select>
+=======
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" name="customer_name" placeholder="Passenger Name" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="text" name="customer_phone" placeholder="+237 675431233" required>
+                </div>
+                <div class="form-group">
+                    <label>Travel Route</label>
+                    <input type="text" name="route" placeholder="Yaoundé - Douala" required>
+                </div>
+                <div class="form-group">
+                    <label>Seat Number</label>
+                    <input type="text" name="seat_number" placeholder="S12" required>
+                </div>
+                <div class="form-group full-width">
+                    <label>Travel Date</label>
+                    <input type="date" name="travel_date" required>
+                </div>
+                <div class="form-group full-width">
+                    <button type="submit" class="btn-submit"><i class="fa-solid fa-check"></i> Create Booking</button>
+>>>>>>> 278447dbacb8319f2c179d04ccc94166e0027099
                 </div>
                 <div class="form-group full-width"><label>Cash Collected (Fare Paid)</label><input type="number" step="0.01" name="fare_paid" placeholder="Enter cash amount (e.g. 4500)" required></div>
                 <div class="form-group full-width"><button type="submit" class="btn-submit"><i class="fa-solid fa-check"></i> Create Booking</button></div>
