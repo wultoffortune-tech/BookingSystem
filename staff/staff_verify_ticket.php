@@ -528,8 +528,8 @@ if (isset($_POST['booking_code'])) {
                             <input type="hidden" name="reservation_id" value="<?php echo $ticket_data['reservation_id']; ?>">
                             <input type="hidden" name="booking_code" value="<?php echo htmlspecialchars($ticket_data['booking_code']); ?>">
                             <button type="submit" class="btn-mark"
-                                onclick="return confirm('Marquer le billet #<?php echo htmlspecialchars($ticket_data['booking_code']); ?> comme utilisé ?\n\nCette action ne peut pas être annulée.');">
-                                <i class="fa-solid fa-ticket"></i> Marquer comme utilisé
+                                onclick="return confirm('Mark the ticket #<?php echo htmlspecialchars($ticket_data['booking_code']); ?> as used ?\n\nThis action cannot be undone.');">
+                                <i class="fa-solid fa-ticket"></i> Mark as Used
                             </button>
                         </form>
                     <?php endif; ?>
