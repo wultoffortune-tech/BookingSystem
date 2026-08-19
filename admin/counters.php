@@ -14,7 +14,7 @@ $admin_email = isset($_SESSION['user_email']) ? $_SESSION['user_email'] : 'admin
 $stmt = $pdo->query("SELECT c.*, u.full_name as admin_name 
                      FROM counter c 
                      LEFT JOIN users u ON c.admin_id = u.user_id
-                     ORDER BY c.agency_id DESC");
+                     ORDER BY c.counter_id DESC");
 $counters = $stmt->fetchAll();
 
 // Get stats

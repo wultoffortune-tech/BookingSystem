@@ -38,6 +38,9 @@ if (isset($_GET['cancel']) && $_GET['cancel'] == 'true') {
             if ($res['status'] == 'cancelled') {
                 $cancel_message = '⚠️ This booking is already cancelled.';
                 $cancel_type = 'error';
+            } elseif ($res['status'] == 'used') {
+                $cancel_message = '❌ This ticket has already been used and cannot be cancelled.';
+                $cancel_type = 'error';
             } else {
                 // Update reservation status to cancelled
                 $stmt = $pdo->prepare("UPDATE reservation SET status = 'cancelled', seats_released = 1 WHERE reservation_id = ? AND passenger_id = ?");
@@ -256,6 +259,11 @@ include 'includes/header.php';
     .payment-status.cancelled {
         background: rgba(239, 68, 68, 0.1);
         color: #EF4444;
+    }
+
+    .payment-status.used {
+        background: rgba(56, 189, 248, 0.1);
+        color: #38BDF8;
     }
 
     .btn-pay {
@@ -488,7 +496,12 @@ include 'includes/header.php';
                     <span class="label">Status</span>
                     <span class="value">
                         <span class="payment-status <?php echo $reservation['status']; ?>">
-                            <i class="fas <?php echo $reservation['status'] == 'confirmed' ? 'fa-check-circle' : ($reservation['status'] == 'cancelled' ? 'fa-times-circle' : 'fa-clock'); ?>"></i>
+                            <i class="fas <?php
+                                echo $reservation['status'] == 'confirmed' ? 'fa-check-circle'
+                                    : ($reservation['status'] == 'cancelled' ? 'fa-times-circle'
+                                    : ($reservation['status'] == 'used' ? 'fa-check-double'
+                                    : 'fa-clock'));
+                            ?>"></i>
                             <?php echo ucfirst(htmlspecialchars($reservation['status'])); ?>
                         </span>
                     </span>
@@ -504,7 +517,7 @@ include 'includes/header.php';
             <div class="payment-card">
                 <h3><i class="fas fa-credit-card"></i> Payment Method</h3>
 
-                <?php if ($reservation['status'] !== 'confirmed' && $reservation['status'] !== 'cancelled'): ?>
+                <?php if ($reservation['status'] !== 'confirmed' && $reservation['status'] !== 'cancelled' && $reservation['status'] !== 'used'): ?>
                     <!-- Payment Form for Pending Bookings -->
                     <form method="POST" action="payment.php?reservation_id=<?php echo $reservation_id; ?>">
                         <input type="hidden" name="reservation_id" value="<?php echo $reservation_id; ?>">
@@ -557,6 +570,12 @@ include 'includes/header.php';
                         onclick="return confirm('Are you sure you want to cancel this confirmed booking?\n\nRoute: <?php echo addslashes($reservation['original_city'] . ' → ' . $reservation['destination']); ?>\nSeat: <?php echo $reservation['seat_number']; ?>\n\nThis action cannot be undone.');">
                         <i class="fas fa-times"></i> Cancel Booking
                     </a>
+
+                <?php elseif ($reservation['status'] === 'used'): ?>
+                    <!-- Used Ticket -->
+                    <div style="margin-bottom:20px; color:#38BDF8; font-size:14px;">
+                        <p><i class="fas fa-check-double"></i> This ticket has already been used and cannot be modified.</p>
+                    </div>
 
                 <?php elseif ($reservation['status'] === 'cancelled'): ?>
                     <!-- Cancelled Booking -->

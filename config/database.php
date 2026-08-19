@@ -2,8 +2,8 @@
 // Database configuration based on your schema
 $host = 'localhost';
 $dbname = 'booking-system';
-$username = 'root';
-$password = '';
+$username = 'intern';
+$password = 'intern';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);

@@ -474,6 +474,12 @@ $upcoming_bookings = $stmt->fetchAll();
             border: 1px solid rgba(239, 68, 68, 0.1);
         }
 
+        .status-badge.used {
+            background: rgba(56, 189, 248, 0.1);
+            color: #38BDF8;
+            border: 1px solid rgba(56, 189, 248, 0.1);
+        }
+
         .booking-actions {
             display: flex;
             gap: 6px;
@@ -816,9 +822,11 @@ $upcoming_bookings = $stmt->fetchAll();
                                     <a href="../booking.php?schedule_id=<?php echo $booking['schedule_id']; ?>" class="btn-sm btn-sm-primary">
                                         <i class="fas fa-eye"></i> View
                                     </a>
-                                    <a href="../bookings.php?cancel=<?php echo $booking['reservation_id']; ?>" class="btn-sm btn-sm-danger" onclick="return confirm('Are you sure you want to cancel this booking?')">
-                                        <i class="fas fa-times"></i> Cancel
-                                    </a>
+                                    <?php if ($booking['status'] != 'used'): ?>
+                                        <a href="../bookings.php?cancel=<?php echo $booking['reservation_id']; ?>" class="btn-sm btn-sm-danger" onclick="return confirm('Are you sure you want to cancel this booking?')">
+                                            <i class="fas fa-times"></i> Cancel
+                                        </a>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                                 <?php if ($booking['status'] == 'pending'): ?>
                                     <a href="../payment.php?reservation_id=<?php echo $booking['reservation_id']; ?>" class="btn-sm btn-sm-success">

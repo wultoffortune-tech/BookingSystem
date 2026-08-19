@@ -1,5 +1,5 @@
 <?php
-$base_url = '/booking-system/';
+$base_url = '/';
 ?>
 <!DOCTYPE html>
 <html lang="en">
