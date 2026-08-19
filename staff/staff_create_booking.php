@@ -683,7 +683,7 @@ if (isset($_GET['get_seats']) && isset($_GET['schedule_id'])) {
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                         <div class="form-group">
                             <label><i class="fas fa-money-bill"></i> Fare Amount</label>
-                            <input type="number" step="0.01" name="fare_paid" id="fareAmount" placeholder="Amount will auto-fill" required>
+                            <input type="number" step="0.01" name="fare_paid" id="fareAmount" placeholder="Amount " required>
                             <div class="price-display" id="priceDisplay">
                                 <i class="fas fa-info-circle"></i> Fare: <span id="displayPrice">0</span> XAF
                             </div>

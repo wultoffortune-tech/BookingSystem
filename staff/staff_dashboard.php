@@ -397,6 +397,7 @@ $staff_name = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : 'Staff';
             <a href="staff_create_booking.php" class="primary"><i class="fas fa-user-plus"></i> Assist Booking</a>
             <a href="staff_verify_ticket.php" class="green"><i class="fas fa-check-circle"></i> Verify Ticket</a>
             <a href="manage_bookings.php"><i class="fas fa-ticket-alt"></i> Manage Bookings</a>
+            <a href="board_ticket.php"><i class="fas fa-shuttle-van"></i> Board Ticket</a>
         </div>
 
         <div class="recent-section">
