@@ -10,19 +10,19 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] != 'admin') {
 $admin_name = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : 'Admin';
 $admin_email = isset($_SESSION['user_email']) ? $_SESSION['user_email'] : 'admin@camexpress.cm';
 
-// Get all counters
-$stmt = $pdo->query("SELECT c.*, u.full_name as admin_name 
-                     FROM counter c 
+// Get all agecnies
+$stmt = $pdo->query("SELECT a.*, u.full_name as admin_name 
+                     FROM agency a
                      LEFT JOIN users u ON c.admin_id = u.user_id
                      ORDER BY c.agency_id DESC");
-$counters = $stmt->fetchAll();
+$agency = $stmt->fetchAll();
 
 // Get stats
 $stmt = $pdo->query("SELECT 
     COUNT(*) as total,
     SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active,
     SUM(CASE WHEN status = 'inactive' THEN 1 ELSE 0 END) as inactive
-    FROM counter");
+    FROM agency");
 $stats = $stmt->fetch();
 
 include '../includes/header.php';
@@ -276,10 +276,10 @@ include '../includes/header.php';
         <div class="page-header">
             <div class="header-actions">
                 <div>
-                    <h1>Manage <span>Counters</span></h1>
-                    <p>Manage all sales counters/agencies.</p>
+                    <h1>Manage <span>agencies</span></h1>
+                    <p>Manage all sales agency/agencies.</p>
                 </div>
-                <a href="counter_add.php" class="btn-add"><i class="fas fa-plus"></i> Add Counter</a>
+                <a href="agency_add.php" class="btn-add"><i class="fas fa-plus"></i> Add agency</a>
             </div>
         </div>
 
@@ -287,7 +287,7 @@ include '../includes/header.php';
         <div class="stats-grid">
             <div class="stat-card purple">
                 <div class="stat-number"><?php echo isset($stats['total']) ? $stats['total'] : 0; ?></div>
-                <div class="stat-label">Total Counters</div>
+                <div class="stat-label">Total agencies</div>
             </div>
             <div class="stat-card green">
                 <div class="stat-number"><?php echo isset($stats['active']) ? $stats['active'] : 0; ?></div>
@@ -305,6 +305,7 @@ include '../includes/header.php';
                 <table>
                     <thead>
                         <tr>
+
                             <th>ID</th>
                             <th>Code</th>
                             <th>Name</th>
@@ -317,26 +318,26 @@ include '../includes/header.php';
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (count($counters) > 0): ?>
-                            <?php foreach ($counters as $counter): ?>
+                        <?php if (count($agency) > 0): ?>
+                            <?php foreach ($agency as $agency): ?>
                                 <tr>
-                                    <td>#<?php echo $counter['agency_id']; ?></td>
-                                    <td><span style="color:#8B5CF6; font-weight:600;"><?php echo htmlspecialchars($counter['counter_code']); ?></span></td>
-                                    <td><strong><?php echo htmlspecialchars($counter['name']); ?></strong></td>
-                                    <td><?php echo htmlspecialchars($counter['location']); ?></td>
-                                    <td><?php echo htmlspecialchars($counter['city']); ?></td>
-                                    <td><?php echo htmlspecialchars($counter['phone_number']); ?></td>
-                                    <td><?php echo isset($counter['admin_name']) ? htmlspecialchars($counter['admin_name']) : 'N/A'; ?></td>
+                                    <td>#<?php echo $agency['agency_id']; ?></td>
+                                    <td><span style="color:#8B5CF6; font-weight:600;"><?php echo htmlspecialchars($agency['agency_code']); ?></span></td>
+                                    <td><strong><?php echo htmlspecialchars($agency['name']); ?></strong></td>
+                                    <td><?php echo htmlspecialchars($agency['location']); ?></td>
+                                    <td><?php echo htmlspecialchars($agency['city']); ?></td>
+                                    <td><?php echo htmlspecialchars($agency['phone_number']); ?></td>
+                                    <td><?php echo isset($agency['admin_name']) ? htmlspecialchars($agency['admin_name']) : 'N/A'; ?></td>
                                     <td>
-                                        <span class="status-badge <?php echo isset($counter['status']) ? $counter['status'] : 'inactive'; ?>">
-                                            <?php echo isset($counter['status']) ? ucfirst($counter['status']) : 'Inactive'; ?>
+                                        <span class="status-badge <?php echo isset($agency['status']) ? $agency['status'] : 'inactive'; ?>">
+                                            <?php echo isset($agency['status']) ? ucfirst($agency['status']) : 'Inactive'; ?>
                                         </span>
                                     </td>
                                     <td>
-                                        <a href="counter_edit.php?id=<?php echo $counter['agency_id']; ?>" class="btn-action btn-edit">
+                                        <a href="agency_edit.php?id=<?php echo $agency['agency_id']; ?>" class="btn-action btn-edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="counter_delete.php?id=<?php echo $counter['agency_id']; ?>" class="btn-action btn-delete" onclick="return confirm('Are you sure you want to delete this counter?')">
+                                        <a href="cagency_delete.php?id=<?php echo $agency['agency_id']; ?>" class="btn-action btn-delete" onclick="return confirm('Are you sure you want to delete this agency?')">
                                             <i class="fas fa-trash"></i>
                                         </a>
                                     </td>
@@ -347,10 +348,10 @@ include '../includes/header.php';
                                 <td colspan="9">
                                     <div class="no-data">
                                         <i class="fas fa-store"></i>
-                                        <h3>No Counters</h3>
-                                        <p>No counters/agencies have been created yet.</p>
-                                        <a href="counter_add.php" style="display:inline-block; margin-top:12px; padding:10px 24px; background:#8B5CF6; color:#FFFFFF; border-radius:8px; text-decoration:none; font-weight:600;">
-                                            <i class="fas fa-plus"></i> Create First Counter
+                                        <h3>No agencies</h3>
+                                        <p>No agencies/agencies have been created yet.</p>
+                                        <a href="agency_add.php" style="display:inline-block; margin-top:12px; padding:10px 24px; background:#8B5CF6; color:#FFFFFF; border-radius:8px; text-decoration:none; font-weight:600;">
+                                            <i class="fas fa-plus"></i> Create First agency
                                         </a>
                                     </div>
                                 </td>

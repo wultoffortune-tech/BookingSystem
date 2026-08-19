@@ -12,6 +12,7 @@ $error = "";
 $selected_schedule_id = isset($_POST['schedule_id']) ? (int)$_POST['schedule_id'] : 0;
 $reserved_seats = [];
 $total_seats = 40;
+$selected_price = 0;
 
 // Fetch schedules for dropdown
 $sql = "SELECT s.schedule_id, s.departure_time, s.price, s.available_seats,
@@ -23,20 +24,21 @@ $sql = "SELECT s.schedule_id, s.departure_time, s.price, s.available_seats,
         ORDER BY s.departure_time ASC";
 $schedules = $pdo->query($sql)->fetchAll();
 
-// If schedule is selected, get reserved seats
+// If schedule is selected, get reserved seats and price
 if ($selected_schedule_id > 0) {
     $stmt = $pdo->prepare("SELECT seat_number FROM reservation WHERE schedule_id = ? AND status != 'cancelled'");
     $stmt->execute([$selected_schedule_id]);
     $reserved_seats = array_column($stmt->fetchAll(), 'seat_number');
 
     // Get total seats for the selected schedule
-    $stmt = $pdo->prepare("SELECT b.total_seats 
+    $stmt = $pdo->prepare("SELECT b.total_seats, s.price 
                            FROM schedule s 
                            JOIN bus b ON s.bus_id = b.bus_id 
                            WHERE s.schedule_id = ?");
     $stmt->execute([$selected_schedule_id]);
     $bus = $stmt->fetch();
     $total_seats = $bus ? (int)$bus['total_seats'] : 40;
+    $selected_price = $bus ? (float)$bus['price'] : 0;
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['confirm_booking'])) {
@@ -107,13 +109,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['confirm_booking'])) {
         // ========================================
         $stmt = $pdo->prepare("INSERT INTO reservation 
                               (booking_code, passenger_id, schedule_id, seat_number, fare_paid, status, seats_released, assisted_by_staff, assistance_notes) 
-                              VALUES (?, ?, ?, ?, ?, 'confirmed', 0, 1, 'Paid in cash at counter by staff')");
+                              VALUES (?, ?, ?, ?, ?, 'confirmed', 0, 1, 'Paid in cash at agency by staff')");
         $stmt->execute([$booking_code, $passenger_id, $schedule_id, $seat_number, $fare_paid]);
 
         $reservation_id = $pdo->lastInsertId();
 
         // ========================================
-        // 3. INSERT PAYMENT RECORD - FIXED
+        // 3. INSERT PAYMENT RECORD
         // ========================================
         $payment_method = 'cash';
         $payment_status = 'completed';
@@ -184,6 +186,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['confirm_booking'])) {
         $selected_schedule_id = 0;
         $reserved_seats = [];
         $total_seats = 40;
+        $selected_price = 0;
     } catch (Exception $e) {
         $pdo->rollBack();
         $error = "❌ " . $e->getMessage();
@@ -194,14 +197,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['confirm_booking'])) {
     }
 }
 
-// Handle AJAX request for getting reserved seats
+// Handle AJAX request for getting reserved seats and price
 if (isset($_GET['get_seats']) && isset($_GET['schedule_id'])) {
     $schedule_id = (int)$_GET['schedule_id'];
     $stmt = $pdo->prepare("SELECT seat_number FROM reservation WHERE schedule_id = ? AND status != 'cancelled'");
     $stmt->execute([$schedule_id]);
     $seats = array_column($stmt->fetchAll(), 'seat_number');
+
+    // Get price for this schedule
+    $stmt = $pdo->prepare("SELECT price FROM schedule WHERE schedule_id = ?");
+    $stmt->execute([$schedule_id]);
+    $price = $stmt->fetch();
+    $fare_price = $price ? (float)$price['price'] : 0;
+
     header('Content-Type: application/json');
-    echo json_encode(['reserved_seats' => $seats]);
+    echo json_encode(['reserved_seats' => $seats, 'fare_price' => $fare_price]);
     exit();
 }
 
@@ -513,6 +523,26 @@ if (isset($_GET['get_seats']) && isset($_GET['schedule_id'])) {
             font-weight: 600;
         }
 
+        /* Price display */
+        .price-display {
+            background: rgba(16, 185, 129, 0.04);
+            border: 1px solid rgba(16, 185, 129, 0.06);
+            border-radius: 8px;
+            padding: 10px 16px;
+            margin-top: 4px;
+            display: none;
+            color: #10B981;
+            font-weight: 600;
+        }
+
+        .price-display.active {
+            display: block;
+        }
+
+        .price-display i {
+            margin-right: 6px;
+        }
+
         @media (max-width: 992px) {
             .seat-grid {
                 grid-template-columns: repeat(6, 1fr);
@@ -587,12 +617,9 @@ if (isset($_GET['get_seats']) && isset($_GET['schedule_id'])) {
                             <label><i class="fas fa-phone"></i> Phone Number</label>
                             <input type="text" name="phone_number" placeholder="+237 6XX XXX XXX" required>
                         </div>
+
                         <div class="form-group">
-                            <label><i class="fas fa-calendar"></i> Date of Birth</label>
-                            <input type="date" name="date_of_birth">
-                        </div>
-                        <div class="form-group" style="grid-column: span 2;">
-                            <label><i class="fas fa-id-card"></i> ID Number (Optional)</label>
+                            <label><i class="fas fa-id-card"></i> ID Number</label>
                             <input type="text" name="id_number" placeholder="National id">
                         </div>
                     </div>
@@ -604,7 +631,7 @@ if (isset($_GET['get_seats']) && isset($_GET['schedule_id'])) {
                     <select name="schedule_id" id="scheduleSelect" required>
                         <option value="" disabled selected>-- Choose a trip --</option>
                         <?php foreach ($schedules as $sch): ?>
-                            <option value="<?php echo $sch['schedule_id']; ?>">
+                            <option value="<?php echo $sch['schedule_id']; ?>" data-price="<?php echo $sch['price']; ?>">
                                 <?php echo htmlspecialchars($sch['original_city'] . ' → ' . $sch['destination']); ?>
                                 | <?php echo date('d M H:i', strtotime($sch['departure_time'])); ?>
                                 | XAF <?php echo number_format($sch['price'], 0); ?>
@@ -656,7 +683,10 @@ if (isset($_GET['get_seats']) && isset($_GET['schedule_id'])) {
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                         <div class="form-group">
                             <label><i class="fas fa-money-bill"></i> Fare Amount</label>
-                            <input type="number" step="0.01" name="fare_paid" placeholder="Enter amount" required>
+                            <input type="number" step="0.01" name="fare_paid" id="fareAmount" placeholder="Amount will auto-fill" required>
+                            <div class="price-display" id="priceDisplay">
+                                <i class="fas fa-info-circle"></i> Fare: <span id="displayPrice">0</span> XAF
+                            </div>
                         </div>
                         <div class="form-group">
                             <label><i class="fas fa-credit-card"></i> Payment Method</label>
@@ -688,7 +718,61 @@ if (isset($_GET['get_seats']) && isset($_GET['schedule_id'])) {
             const submitBtn = document.getElementById('submitBtn');
             const scheduleSelect = document.getElementById('scheduleSelect');
             const seatGrid = document.getElementById('seatGrid');
+            const fareAmount = document.getElementById('fareAmount');
+            const priceDisplay = document.getElementById('priceDisplay');
+            const displayPrice = document.getElementById('displayPrice');
 
+            // ========================================
+            // AUTO-FILL PRICE WHEN SCHEDULE IS SELECTED
+            // ========================================
+            scheduleSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const price = selectedOption.getAttribute('data-price');
+                const scheduleId = this.value;
+
+                if (scheduleId && price) {
+                    // Auto-fill the fare amount
+                    fareAmount.value = price;
+                    displayPrice.textContent = parseFloat(price).toLocaleString();
+                    priceDisplay.classList.add('active');
+
+                    // Load seats for this schedule
+                    fetch(`staff_create_booking.php?get_seats=1&schedule_id=${scheduleId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            updateSeatGrid(data.reserved_seats);
+                            // Also update price if returned from server
+                            if (data.fare_price) {
+                                fareAmount.value = data.fare_price;
+                                displayPrice.textContent = parseFloat(data.fare_price).toLocaleString();
+                                priceDisplay.classList.add('active');
+                            }
+                            checkFormValidity();
+                        })
+                        .catch(error => console.error('Error loading seats:', error));
+                } else {
+                    fareAmount.value = '';
+                    priceDisplay.classList.remove('active');
+                }
+                checkFormValidity();
+            });
+
+            // ========================================
+            // MANUAL PRICE INPUT - Still allow manual override
+            // ========================================
+            fareAmount.addEventListener('input', function() {
+                if (this.value > 0) {
+                    displayPrice.textContent = parseFloat(this.value).toLocaleString();
+                    priceDisplay.classList.add('active');
+                } else {
+                    priceDisplay.classList.remove('active');
+                }
+                checkFormValidity();
+            });
+
+            // ========================================
+            // FORM VALIDATION
+            // ========================================
             function checkFormValidity() {
                 const hasName = document.querySelector('input[name="full_name"]').value.trim() !== '';
                 const hasEmail = document.querySelector('input[name="email"]').value.trim() !== '';
@@ -705,19 +789,9 @@ if (isset($_GET['get_seats']) && isset($_GET['schedule_id'])) {
                 input.addEventListener('input', checkFormValidity);
             });
 
-            scheduleSelect.addEventListener('change', function() {
-                const scheduleId = this.value;
-                if (scheduleId) {
-                    fetch(`staff_create_booking.php?get_seats=1&schedule_id=${scheduleId}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            updateSeatGrid(data.reserved_seats);
-                            checkFormValidity();
-                        })
-                        .catch(error => console.error('Error loading seats:', error));
-                }
-            });
-
+            // ========================================
+            // SEAT SELECTION
+            // ========================================
             seatGrid.addEventListener('click', function(e) {
                 const seat = e.target.closest('.seat');
                 if (!seat || seat.classList.contains('taken')) return;
@@ -731,6 +805,9 @@ if (isset($_GET['get_seats']) && isset($_GET['schedule_id'])) {
                 }
             });
 
+            // ========================================
+            // UPDATE SEAT GRID
+            // ========================================
             function updateSeatGrid(reservedSeats) {
                 const seats = seatGrid.querySelectorAll('.seat');
                 seats.forEach(seat => {
@@ -756,6 +833,13 @@ if (isset($_GET['get_seats']) && isset($_GET['schedule_id'])) {
                 document.querySelectorAll('.seat').forEach(s => s.classList.remove('selected'));
                 document.querySelectorAll('input[name="seat_number"]').forEach(r => r.checked = false);
                 checkFormValidity();
+            }
+
+            // ========================================
+            // TRIGGER SCHEDULE CHANGE ON PAGE LOAD IF SELECTED
+            // ========================================
+            if (scheduleSelect.value) {
+                scheduleSelect.dispatchEvent(new Event('change'));
             }
 
             checkFormValidity();

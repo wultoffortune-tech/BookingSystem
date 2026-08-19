@@ -32,18 +32,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Please fill in all required fields.';
     } else {
         try {
-            // Generate counter code
-            $counter_code = 'CTR-' . strtoupper(substr($name, 0, 3)) . '-' . rand(100, 999);
+            // Generate agency code
+            $agency_code = 'CTR-' . strtoupper(substr($name, 0, 3)) . '-' . rand(100, 999);
 
-            $stmt = $pdo->prepare("INSERT INTO counter 
-                                  (counter_code, name, location, city, phone_number, email, address, admin_id, status) 
+            $stmt = $pdo->prepare("INSERT INTO agency
+                                  (agency_code, name, location, city, phone_number, email, address, admin_id, status) 
                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$counter_code, $name, $location, $city, $phone_number, $email, $address, $admin_id, $status]);
+            $stmt->execute([$agency_code, $name, $location, $city, $phone_number, $email, $address, $admin_id, $status]);
 
-            $success = '✅ Counter created successfully!';
+            $success = '✅ agency created successfully!';
 
             // Redirect after 2 seconds
-            header("refresh:2;url=counters.php");
+            header("refresh:2;url=agency.php");
         } catch (PDOException $e) {
             $error = '❌ Database Error: ' . $e->getMessage();
         }
@@ -232,8 +232,8 @@ include '../includes/header.php';
 <section class="page-section">
     <div class="container">
         <div class="page-header">
-            <h1>Add <span>Counter</span></h1>
-            <p>Create a new sales counter/agency.</p>
+            <h1>Add <span>agency</span></h1>
+            <p>Create a new sales agency/agency.</p>
         </div>
 
         <?php if ($error): ?>
@@ -248,11 +248,11 @@ include '../includes/header.php';
             <form method="POST" action="">
                 <div class="form-row">
                     <div class="form-group">
-                        <label><i class="fas fa-store"></i> Counter Name *</label>
+                        <label><i class="fas fa-store"></i> agency Name *</label>
                         <input type="text" name="name" placeholder="e.g. Central Office" required>
                     </div>
                     <div class="form-group">
-                        <label><i class="fas fa-code"></i> Counter Code</label>
+                        <label><i class="fas fa-code"></i> agency Code</label>
                         <input type="text" value="Auto-generated" disabled style="color:#475569;">
                     </div>
                 </div>
@@ -275,13 +275,13 @@ include '../includes/header.php';
                     </div>
                     <div class="form-group">
                         <label><i class="fas fa-envelope"></i> Email</label>
-                        <input type="email" name="email" placeholder="counter@example.com">
+                        <input type="email" name="email" placeholder="agency@example.com">
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label><i class="fas fa-address"></i> Address</label>
-                    <textarea name="address" placeholder="Full address of the counter"></textarea>
+                    <textarea name="address" placeholder="Full address of the agency"></textarea>
                 </div>
 
                 <div class="form-row">
@@ -307,8 +307,8 @@ include '../includes/header.php';
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Create Counter</button>
-                    <a href="counters.php" class="btn-cancel"><i class="fas fa-times"></i> Cancel</a>
+                    <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Create agency</button>
+                    <a href="agency.php" class="btn-cancel"><i class="fas fa-times"></i> Cancel</a>
                 </div>
             </form>
         </div>
