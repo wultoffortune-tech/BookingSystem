@@ -332,6 +332,7 @@ $bookings = $stmt->fetchAll();
     </style>
 </head>
 
+
 <body>
 
     <header class="admin-header">
