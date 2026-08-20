@@ -32,7 +32,7 @@ function generateBookingCode($pdo)
         }
     }
     return $code;
-} 
+}
 
 // Get schedule ID
 $schedule_id = isset($_GET['schedule_id']) ? (int)$_GET['schedule_id'] : 0;

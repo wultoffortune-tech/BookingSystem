@@ -62,6 +62,26 @@ $stmt = $pdo->query("SELECT COUNT(*) as total FROM reservation");
 $result = $stmt->fetch();
 $stats['total_reservations'] = $result ? $result['total'] : 0;
 
+// Confirmed bookings
+$stmt = $pdo->query("SELECT COUNT(*) as total FROM reservation WHERE status = 'confirmed'");
+$result = $stmt->fetch();
+$stats['confirmed_bookings'] = $result ? $result['total'] : 0;
+
+// Used bookings
+$stmt = $pdo->query("SELECT COUNT(*) as total FROM reservation WHERE status = 'used'");
+$result = $stmt->fetch();
+$stats['used_bookings'] = $result ? $result['total'] : 0;
+
+// Pending bookings
+$stmt = $pdo->query("SELECT COUNT(*) as total FROM reservation WHERE status = 'pending'");
+$result = $stmt->fetch();
+$stats['pending_bookings'] = $result ? $result['total'] : 0;
+
+// Cancelled bookings
+$stmt = $pdo->query("SELECT COUNT(*) as total FROM reservation WHERE status = 'cancelled'");
+$result = $stmt->fetch();
+$stats['cancelled_bookings'] = $result ? $result['total'] : 0;
+
 // Total revenue
 $paymentTableExists = $pdo->query("SHOW TABLES LIKE 'payment'")->fetch();
 if ($paymentTableExists) {
@@ -88,11 +108,11 @@ try {
     $selectExtras .= $statusColumn ? ', r.status' : ', "pending" AS status';
     $selectExtras .= $dateColumn ? ', r.reservation_date' : ', NOW() AS reservation_date';
 
-    $sql = "SELECT r.seat_number, r.fare_paid" . $selectExtras . ", u.full_name, u.email
+    $sql = "SELECT r.seat_number, r.fare_paid, r.booking_code" . $selectExtras . ", u.full_name, u.email
             FROM reservation r
             JOIN users u ON r.passenger_id = u.user_id
             ORDER BY r.reservation_id DESC
-            LIMIT 5";
+            LIMIT 10";
 
     $stmt = $pdo->query($sql);
     $recent_bookings = $stmt->fetchAll();
@@ -228,7 +248,7 @@ if (isset($_SESSION['user_name']) && !empty($_SESSION['user_name'])) {
         /* ===== STATS GRID ===== */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 16px;
             margin-bottom: 32px;
         }
@@ -239,6 +259,7 @@ if (isset($_SESSION['user_name']) && !empty($_SESSION['user_name'])) {
             border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.02);
             transition: all 0.3s ease;
+            text-align: center;
         }
 
         .stat-card:hover {
@@ -248,7 +269,6 @@ if (isset($_SESSION['user_name']) && !empty($_SESSION['user_name'])) {
 
         .stat-card .stat-icon {
             font-size: 20px;
-            color: #38BDF8;
             margin-bottom: 6px;
         }
 
@@ -305,6 +325,14 @@ if (isset($_SESSION['user_name']) && !empty($_SESSION['user_name'])) {
 
         .stat-card.cyan .stat-icon {
             color: #06B6D4;
+        }
+
+        .stat-card.red .stat-icon {
+            color: #EF4444;
+        }
+
+        .stat-card.yellow .stat-icon {
+            color: #F59E0B;
         }
 
         /* ===== ADMIN ACTIONS ===== */
@@ -433,6 +461,21 @@ if (isset($_SESSION['user_name']) && !empty($_SESSION['user_name'])) {
             background: rgba(255, 255, 255, 0.02);
         }
 
+        /* ===== USED ROW STYLING ===== */
+        table tr.used-row {
+            opacity: 0.7;
+            background: rgba(56, 189, 248, 0.02);
+        }
+
+        table tr.used-row td {
+            color: #94A3B8;
+        }
+
+        table tr.used-row .booking-code {
+            color: #38BDF8 !important;
+            text-decoration: line-through;
+        }
+
         .badge {
             padding: 4px 12px;
             border-radius: 20px;
@@ -443,16 +486,25 @@ if (isset($_SESSION['user_name']) && !empty($_SESSION['user_name'])) {
         .badge-pending {
             background: rgba(245, 158, 11, 0.06);
             color: #F59E0B;
+            border: 1px solid rgba(245, 158, 11, 0.06);
         }
 
         .badge-confirmed {
             background: rgba(52, 211, 153, 0.06);
             color: #34D399;
+            border: 1px solid rgba(52, 211, 153, 0.06);
         }
 
         .badge-cancelled {
             background: rgba(239, 68, 68, 0.06);
             color: #EF4444;
+            border: 1px solid rgba(239, 68, 68, 0.06);
+        }
+
+        .badge-used {
+            background: rgba(56, 189, 248, 0.06);
+            color: #38BDF8;
+            border: 1px solid rgba(56, 189, 248, 0.06);
         }
 
         .badge-completed {
@@ -533,7 +585,6 @@ if (isset($_SESSION['user_name']) && !empty($_SESSION['user_name'])) {
             <span>CamExpress Admin</span>
         </a>
         <div class="admin-info">
-            <!-- ✅ FIXED: Admin name display with fallback -->
             <span>
                 <i class="fas fa-user"></i>
                 <?php echo htmlspecialchars($admin_name); ?>
@@ -547,7 +598,7 @@ if (isset($_SESSION['user_name']) && !empty($_SESSION['user_name'])) {
 
         <!-- ===== WELCOME ===== -->
         <div class="welcome-section">
-            <h1>Welcome back, <span><?php echo htmlspecialchars($admin_name); ?></span>👋!</h1>
+            <h1>Welcome back, <span><?php echo htmlspecialchars($admin_name); ?></span> 👋!</h1>
             <p class="subtitle">Here's what's happening with your bus reservation system today.</p>
         </div>
 
@@ -585,23 +636,46 @@ if (isset($_SESSION['user_name']) && !empty($_SESSION['user_name'])) {
             </div>
         </div>
 
+        <!-- ===== BOOKING STATUS STATS ===== -->
+        <div class="stats-grid" style="margin-bottom:32px;">
+            <div class="stat-card green">
+                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-number"><?php echo $stats['confirmed_bookings']; ?></div>
+                <div class="stat-label">Confirmed</div>
+            </div>
+            <div class="stat-card yellow">
+                <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                <div class="stat-number"><?php echo $stats['pending_bookings']; ?></div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-card blue">
+                <div class="stat-icon"><i class="fas fa-check-double"></i></div>
+                <div class="stat-number"><?php echo $stats['used_bookings']; ?></div>
+                <div class="stat-label">Used</div>
+            </div>
+            <div class="stat-card red">
+                <div class="stat-icon"><i class="fas fa-times-circle"></i></div>
+                <div class="stat-number"><?php echo $stats['cancelled_bookings']; ?></div>
+                <div class="stat-label">Cancelled</div>
+            </div>
+        </div>
+
         <!-- ===== ADMIN ACTIONS ===== -->
         <div class="admin-actions">
             <a href="schedules/index.php" class="primary"><i class="fas fa-calendar-alt"></i> Manage Schedules</a>
             <a href="schedules/create.php" class="green"><i class="fas fa-plus"></i> Add Schedule</a>
-            <a href="routes/index.php" class="blue"><i class="fas fa-route"></i> Manage Routes</a>
+            <a href="routes/index.php"><i class="fas fa-route"></i> Manage Routes</a>
             <a href="../schedule.php"><i class="fas fa-eye"></i> View Public Schedules</a>
             <a href="../home.php"><i class="fas fa-home"></i> View Website</a>
             <a href="users.php" class="danger"><i class="fas fa-users-cog"></i> Manage Users</a>
-            <a href="../staff/staff_dashboard.php" class="warning"><i class="fas fa-user-shield"></i> Manage Staff</a>
-            <a href="../admin/agency.php" class="active"><i class="fas fa-cash-register"></i> Manage agency</a>
+            <a href="../staff/staff_dashboard.php"><i class="fas fa-user-shield"></i> Manage Staff</a>
+            <a href="../admin/agency.php"><i class="fas fa-cash-register"></i> Manage Agency</a>
         </div>
 
         <!-- ===== RECENT BOOKINGS ===== -->
         <div class="recent-section">
             <div class="section-header">
                 <h2><i class="fas fa-clock" style="color: #38BDF8; margin-right: 8px;"></i> Recent Bookings</h2>
-                <!-- <a href="bookings.php">View All →</a> -->
             </div>
 
             <?php if (isset($recent_bookings) && count($recent_bookings) > 0): ?>
@@ -611,6 +685,7 @@ if (isset($_SESSION['user_name']) && !empty($_SESSION['user_name'])) {
                             <tr>
                                 <th>Passenger</th>
                                 <th>Seat</th>
+                                <th>Code</th>
                                 <th>Fare</th>
                                 <th>Status</th>
                                 <th>Date</th>
@@ -618,22 +693,45 @@ if (isset($_SESSION['user_name']) && !empty($_SESSION['user_name'])) {
                         </thead>
                         <tbody>
                             <?php foreach ($recent_bookings as $booking): ?>
-                                <tr>
+                                <?php
+                                $is_used = (isset($booking['status']) && $booking['status'] == 'used');
+                                ?>
+                                <tr class="<?php echo $is_used ? 'used-row' : ''; ?>">
                                     <td>
-                                        <strong><?php echo isset($booking['full_name']) ? htmlspecialchars($booking['full_name']) : 'Unknown'; ?></strong>
-                                        <span style="display: block; font-size: 12px; color: #94A3B8;"><?php echo isset($booking['email']) ? htmlspecialchars($booking['email']) : ''; ?></span>
+                                        <strong style="<?php echo $is_used ? 'color:#94A3B8;' : ''; ?>">
+                                            <?php echo isset($booking['full_name']) ? htmlspecialchars($booking['full_name']) : 'Unknown'; ?>
+                                        </strong>
+                                        <span style="display: block; font-size: 12px; color: <?php echo $is_used ? '#64748B;' : '#94A3B8;'; ?>">
+                                            <?php echo isset($booking['email']) ? htmlspecialchars($booking['email']) : ''; ?>
+                                        </span>
                                     </td>
-                                    <td><?php echo isset($booking['seat_number']) ? htmlspecialchars($booking['seat_number']) : 'N/A'; ?></td>
-                                    <td>XAF <?php echo isset($booking['fare_paid']) ? number_format($booking['fare_paid'], 0) : '0'; ?></td>
+                                    <td style="<?php echo $is_used ? 'color:#94A3B8;' : ''; ?>">
+                                        <?php echo isset($booking['seat_number']) ? htmlspecialchars($booking['seat_number']) : 'N/A'; ?>
+                                    </td>
+                                    <td>
+                                        <span class="booking-code" style="font-weight:600; color:#38BDF8; <?php echo $is_used ? 'text-decoration:line-through;' : ''; ?>">
+                                            <?php echo isset($booking['booking_code']) ? htmlspecialchars($booking['booking_code']) : 'N/A'; ?>
+                                        </span>
+                                        <?php if ($is_used): ?>
+                                            <span style="color:#38BDF8; font-size:10px; margin-left:4px;">(Used)</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td style="<?php echo $is_used ? 'color:#94A3B8;' : ''; ?>">
+                                        XAF <?php echo isset($booking['fare_paid']) ? number_format($booking['fare_paid'], 0) : '0'; ?>
+                                    </td>
                                     <td>
                                         <?php
                                         $status = isset($booking['status']) ? $booking['status'] : 'pending';
                                         ?>
                                         <span class="badge badge-<?php echo $status; ?>">
-                                            <?php echo ucfirst($status); ?>
+                                            <?php if ($is_used): ?>
+                                                <i class="fas fa-check-double"></i> Used
+                                            <?php else: ?>
+                                                <?php echo ucfirst($status); ?>
+                                            <?php endif; ?>
                                         </span>
                                     </td>
-                                    <td>
+                                    <td style="<?php echo $is_used ? 'color:#94A3B8;' : ''; ?>">
                                         <?php
                                         $date = isset($booking['reservation_date']) ? $booking['reservation_date'] : 'now';
                                         echo date('d/m/Y H:i', strtotime($date));

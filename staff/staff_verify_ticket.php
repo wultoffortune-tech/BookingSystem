@@ -9,6 +9,34 @@ if (!isset($_SESSION['user_role']) || ($_SESSION['user_role'] != 'staff' && $_SE
 
 $ticket_data = null;
 $error = "";
+$success = "";
+
+// Handle "Mark as Used" action (posted from the action-row form below)
+if (isset($_POST['mark_used'], $_POST['reservation_id'])) {
+    $reservation_id = (int)$_POST['reservation_id'];
+    try {
+        $pdo->beginTransaction();
+        $stmt = $pdo->prepare("SELECT reservation_id, status FROM reservation WHERE reservation_id = ? FOR UPDATE");
+        $stmt->execute([$reservation_id]);
+        $res = $stmt->fetch();
+
+        if ($res && $res['status'] === 'confirmed') {
+            $stmt = $pdo->prepare("UPDATE reservation SET status = 'used' WHERE reservation_id = ?");
+            $stmt->execute([$reservation_id]);
+            $pdo->commit();
+            $success = "✅ Ticket marked as used.";
+        } else {
+            $pdo->rollBack();
+            $error = $res
+                ? "⚠️ Only a confirmed ticket can be marked as used (current status: " . $res['status'] . ")."
+                : "❌ Ticket not found.";
+        }
+    } catch (PDOException $e) {
+        $pdo->rollBack();
+        error_log("Mark used error: " . $e->getMessage());
+        $error = "❌ Unable to update the ticket. Please try again.";
+    }
+}
 
 if (isset($_POST['booking_code'])) {
     $code = trim($_POST['booking_code']);
@@ -16,8 +44,8 @@ if (isset($_POST['booking_code'])) {
                             s.departure_time, s.arrival_time,
                             rt.original_city, rt.destination,
                             b.bus_name, b.bus_type
-                           FROM reservation r 
-                           JOIN users u ON r.passenger_id = u.user_id 
+                             FROM reservation r
+                           JOIN users u ON r.passenger_id = u.user_id
                            JOIN schedule s ON r.schedule_id = s.schedule_id
                            JOIN route rt ON s.route_id = rt.route_id
                            JOIN bus b ON s.bus_id = b.bus_id
@@ -26,9 +54,9 @@ if (isset($_POST['booking_code'])) {
     $ticket_data = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$ticket_data) {
-        $error = "❌ Invalid Ticket Code.";
-    } elseif ($ticket_data['status'] !== 'confirmed') {
-        $error = "Ticket status is " . $ticket_data['status'] . ".";
+        $error = $error ?: "❌ Invalid Ticket Code.";
+    } elseif (!in_array($ticket_data['status'], ['confirmed', 'used'], true)) {
+        $error = $error ?: "Ticket status is " . $ticket_data['status'] . ".";
     }
 }
 ?>
@@ -149,6 +177,22 @@ if (isset($_POST['booking_code'])) {
             font-size: 18px;
         }
 
+        .success-msg {
+            background: rgba(16, 185, 129, 0.06);
+            color: #10B981;
+            padding: 14px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid rgba(16, 185, 129, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .success-msg i {
+            font-size: 18px;
+        }
+
         /* Ticket Found Card */
         .ticket-card {
             background: #0F172A;
@@ -174,18 +218,42 @@ if (isset($_POST['booking_code'])) {
             color: #FFFFFF;
         }
 
-        .status-active {
-            background: rgba(16, 185, 129, 0.06);
-            color: #10B981;
+        .status-badge {
+            /* background: rgba(16, 185, 129, 0.06);
+            color: #10B981; */
             padding: 4px 14px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: 500;
+            /* border: 1px solid rgba(16, 185, 129, 0.1); */
+        }
+
+        .status-badge i {
+            margin-right: 6px;
+        }
+
+        .status-badge.confirmed {
+            background: rgba(16, 185, 129, 0.06);
+            color: #10B981;
             border: 1px solid rgba(16, 185, 129, 0.1);
         }
 
-        .status-active i {
-            margin-right: 6px;
+        .status-badge.used {
+            background: rgba(56, 189, 248, 0.06);
+            color: #38BDF8;
+            border: 1px solid rgba(56, 189, 248, 0.1);
+        }
+
+        .status-badge.pending {
+            background: rgba(245, 158, 11, 0.06);
+            color: #F59E0B;
+            border: 1px solid rgba(245, 158, 11, 0.1);
+        }
+
+        .status-badge.cancelled {
+            background: rgba(239, 68, 68, 0.06);
+            color: #EF4444;
+            border: 1px solid rgba(239, 68, 68, 0.1);
         }
 
         /* Route Display in Verify */
@@ -277,6 +345,11 @@ if (isset($_POST['booking_code'])) {
             padding-top: 20px;
             display: flex;
             gap: 12px;
+        }
+
+        .action-row form {
+            flex: 1;
+            margin: 0;
         }
 
         .btn-print {
@@ -378,7 +451,11 @@ if (isset($_POST['booking_code'])) {
                 <button type="submit"><i class="fa-solid fa-magnifying-glass"></i> Verify</button>
             </div>
         </form>
-
+        <?php if ($success): ?>
+            <div class="success-msg">
+                <i class="fa-solid fa-circle-check"></i> <?php echo $success; ?>
+            </div>
+        <?php endif; ?>
         <?php if ($error): ?>
             <div class="error-msg">
                 <i class="fa-solid fa-circle-exclamation"></i> <?php echo $error; ?>
@@ -389,7 +466,7 @@ if (isset($_POST['booking_code'])) {
             <div class="ticket-card">
                 <div class="ticket-header">
                     <h3>Booking Details</h3>
-                    <span class="status-active">
+                    <span class="status-badge <?php echo $ticket_data['status']; ?>">
                         <i class="fa-regular fa-circle-check"></i> <?php echo ucfirst($ticket_data['status']); ?>
                     </span>
                 </div>
@@ -446,6 +523,17 @@ if (isset($_POST['booking_code'])) {
                     <a href="staff_print_ticket.php?id=<?php echo $ticket_data['reservation_id']; ?>" target="_blank" class="btn-print">
                         <i class="fa-solid fa-print"></i> Print Ticket
                     </a>
+                    <?php if ($ticket_data['status'] === 'confirmed'): ?>
+                        <form method="POST">
+                            <input type="hidden" name="mark_used" value="1">
+                            <input type="hidden" name="reservation_id" value="<?php echo $ticket_data['reservation_id']; ?>">
+                            <input type="hidden" name="booking_code" value="<?php echo htmlspecialchars($ticket_data['booking_code']); ?>">
+                            <button type="submit" class="btn-mark"
+                                onclick="return confirm('mark ticket #<?php echo htmlspecialchars($ticket_data['booking_code']); ?> as used ?\n\nthis action cannot be undo.');">
+                                <i class="fa-solid fa-ticket"></i> mark ticket as used
+                            </button>
+                        </form>
+                    <?php endif; ?>
                 </div>
             </div>
         <?php endif; ?>

@@ -29,6 +29,8 @@ if (isset($_GET['cancel']) && is_numeric($_GET['cancel'])) {
         if ($reservation) {
             if ($reservation['status'] == 'cancelled') {
                 $error = '⚠️ This booking is already cancelled.';
+            } elseif ($reservation['status'] == 'used') {
+                $error = '❌ This ticket has already been used and cannot be cancelled.';
             } else {
                 $stmt = $pdo->prepare("UPDATE reservation 
                                       SET status = 'cancelled', 
@@ -89,6 +91,52 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     }
 }
 
+
+
+
+
+
+// ========================================
+// HANDLE MARK AS USED - Redeem a confirmed ticket at the counter
+// ========================================
+if (isset($_GET['mark_used']) && is_numeric($_GET['mark_used'])) {
+    $reservation_id = (int)$_GET['mark_used'];
+
+    try {
+        $pdo->beginTransaction();
+
+        $stmt = $pdo->prepare("SELECT reservation_id, status FROM reservation WHERE reservation_id = ? FOR UPDATE");
+        $stmt->execute([$reservation_id]);
+        $reservation = $stmt->fetch();
+
+        if ($reservation) {
+            if ($reservation['status'] == 'used') {
+                $pdo->rollBack();
+                $error = '⚠️ This ticket has already been marked as used.';
+            } elseif ($reservation['status'] != 'confirmed') {
+                $pdo->rollBack();
+                $error = '❌ Only confirmed tickets can be marked as used.';
+            } else {
+                $stmt = $pdo->prepare("UPDATE reservation SET status = 'used' WHERE reservation_id = ?");
+                $stmt->execute([$reservation_id]);
+                $pdo->commit();
+                $success = '✅ Ticket marked as used.';
+            }
+        } else {
+            $pdo->rollBack();
+            $error = '❌ Booking not found.';
+        }
+    } catch (PDOException $e) {
+        $pdo->rollBack();
+        error_log("Mark used error: " . $e->getMessage());
+        $error = '❌ Unable to update the ticket. Please try again.';
+    }
+}
+
+
+
+
+
 // Get filter parameters
 $status_filter = isset($_GET['status']) ? $_GET['status'] : 'all';
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
@@ -130,7 +178,8 @@ $stmt = $pdo->query("SELECT
     COUNT(*) as total,
     SUM(CASE WHEN status = 'confirmed' THEN 1 ELSE 0 END) as confirmed,
     SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
-    SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled
+    SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled,
+    SUM(CASE WHEN status = 'used' THEN 1 ELSE 0 END) as used
     FROM reservation");
 $stats = $stmt->fetch();
 
@@ -480,11 +529,18 @@ include '../includes/header.php';
         border: 1px solid rgba(16, 185, 129, 0.1);
     }
 
+    .status-badge.used {
+        background: rgba(56, 189, 248, 0.1);
+        color: #38BDF8;
+        border: 1px solid rgba(56, 189, 248, 0.1);
+    }
+
     .status-badge.pending {
         background: rgba(245, 158, 11, 0.1);
         color: var(--primary-yellow);
         border: 1px solid rgba(245, 158, 11, 0.1);
     }
+
 
     .status-badge.cancelled {
         background: rgba(239, 68, 68, 0.1);
@@ -533,6 +589,17 @@ include '../includes/header.php';
     .btn-action.btn-cancel:hover {
         background: #EF4444;
         color: var(--text-white);
+    }
+
+    .btn-action.btn-mark-used {
+        background: rgba(56, 189, 248, 0.06);
+        color: #38BDF8;
+        border: 1px solid rgba(56, 189, 248, 0.06);
+    }
+
+    .btn-action.btn-mark-used:hover {
+        background: #38BDF8;
+        color: var(--dark-bg);
     }
 
     .btn-action.btn-delete {
@@ -750,7 +817,16 @@ include '../includes/header.php';
                                                     onclick="return confirmDelete(<?php echo $booking['reservation_id']; ?>, '<?php echo htmlspecialchars($booking['booking_code']); ?>', '<?php echo htmlspecialchars($booking['full_name']); ?>')">
                                                     <i class="fas fa-trash"></i>
                                                 </a>
+                                            <?php elseif ($booking['status'] == 'used'): ?>
+                                                <!-- ticket already redeemed: no destructive actions available -->
                                             <?php else: ?>
+                                                <?php if ($booking['status'] == 'confirmed'): ?>
+                                                    <a href="#"
+                                                        class="btn-action btn-mark-used"
+                                                        onclick="confirmMarkUsed(<?php echo $booking['reservation_id']; ?>, '<?php echo htmlspecialchars($booking['booking_code']); ?>', '<?php echo htmlspecialchars($booking['full_name']); ?>')">
+                                                        <i class="fas fa-check-double"></i>
+                                                    </a>
+                                                <?php endif; ?>
                                                 <a href="#"
                                                     class="btn-action btn-cancel"
                                                     onclick="confirmCancel(<?php echo $booking['reservation_id']; ?>, '<?php echo htmlspecialchars($booking['booking_code']); ?>', '<?php echo htmlspecialchars($booking['full_name']); ?>')">
@@ -795,6 +871,13 @@ include '../includes/header.php';
     function confirmDelete(id, code, name) {
         if (confirm('⚠️ Are you sure you want to permanently DELETE ticket #' + code + ' for ' + name + '?\n\nThis action CANNOT be undone!')) {
             return true;
+        }
+        return false;
+    }
+
+    function confirmMarkUsed(id, code, name) {
+        if (confirm('Mark ticket #' + code + ' for ' + name + ' as used?\n\nThis indicates the passenger has boarded and cannot be undone from this screen.')) {
+            window.location.href = '?mark_used=' + id;
         }
         return false;
     }

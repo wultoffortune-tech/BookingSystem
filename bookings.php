@@ -32,6 +32,9 @@ if (isset($_GET['cancel']) && is_numeric($_GET['cancel'])) {
             if ($reservation['status'] == 'cancelled') {
                 $_SESSION['cancel_message'] = '⚠️ This booking is already cancelled.';
                 $_SESSION['cancel_type'] = 'error';
+            } elseif ($reservation['status'] == 'used') {
+                $_SESSION['cancel_message'] = '❌ This ticket has already been used and cannot be cancelled.';
+                $_SESSION['cancel_type'] = 'error';
             } else {
                 // 1. Update status to cancelled + mark seat as released
                 // REMOVED: 'cancelled_at = NOW()' to prevent column-not-found crashes
@@ -290,6 +293,15 @@ include 'includes/header.php';
         border: 1px solid rgba(52, 211, 153, 0.06);
     }
 
+
+    .status-badge.used {
+        background: rgba(56, 189, 248, 0.06);
+        color: #38BDF8;
+        border: 1px solid rgba(56, 189, 248, 0.06);
+    }
+
+
+
     .status-badge.cancelled {
         background: rgba(239, 68, 68, 0.06);
         color: #EF4444;
@@ -547,6 +559,7 @@ include 'includes/header.php';
                 <?php
                 $status = isset($booking['status']) ? $booking['status'] : 'pending';
                 $is_cancelled = ($status == 'cancelled');
+                $is_used = ($status == 'used');
                 ?>
                 <div class="booking-card" style="<?php echo $is_cancelled ? 'opacity: 0.7; border-color: rgba(239,68,68,0.1);' : ''; ?>">
 
@@ -598,6 +611,8 @@ include 'includes/header.php';
                                 <button onclick="confirmDelete(<?php echo $booking['reservation_id']; ?>, '<?php echo addslashes($booking['original_city'] . ' → ' . $booking['destination']); ?>', '<?php echo $booking['seat_number']; ?>')" class="btn-delete">
                                     <i class="fas fa-trash"></i> Delete Ticket
                                 </button>
+                            <?php elseif ($is_used): ?>
+                                <span style="color:#38BDF8; font-weight:600;"><i class="fas fa-check-double"></i> Used</span>
                             <?php else: ?>
                                 <button onclick="confirmCancel(<?php echo $booking['reservation_id']; ?>, '<?php echo addslashes($booking['original_city'] . ' → ' . $booking['destination']); ?>', '<?php echo $booking['seat_number']; ?>')" class="btn-cancel">
                                     <i class="fas fa-times"></i> Cancel Booking

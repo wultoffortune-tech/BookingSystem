@@ -19,6 +19,14 @@ $stats['total_bookings'] = $stmt->fetchColumn();
 $stmt = $pdo->query("SELECT COUNT(*) as total FROM reservation WHERE status = 'confirmed'");
 $stats['active_tickets'] = $stmt->fetchColumn();
 
+// Pending tickets
+$stmt = $pdo->query("SELECT COUNT(*) as total FROM reservation WHERE status = 'pending'");
+$stats['pending_tickets'] = $stmt->fetchColumn();
+
+// Used tickets
+$stmt = $pdo->query("SELECT COUNT(*) as total FROM reservation WHERE status = 'used'");
+$stats['used_tickets'] = $stmt->fetchColumn();
+
 // Cancelled tickets
 $stmt = $pdo->query("SELECT COUNT(*) as total FROM reservation WHERE status = 'cancelled'");
 $stats['cancelled_tickets'] = $stmt->fetchColumn();
@@ -27,7 +35,7 @@ $stats['cancelled_tickets'] = $stmt->fetchColumn();
 $stmt = $pdo->prepare("SELECT r.*, u.full_name 
                        FROM reservation r 
                        JOIN users u ON r.passenger_id = u.user_id 
-                       ORDER BY r.reservation_id DESC LIMIT 5");
+                       ORDER BY r.reservation_id DESC LIMIT 10");
 $stmt->execute();
 $recent_bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -137,7 +145,7 @@ $staff_name = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : 'Staff';
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 16px;
             margin-bottom: 32px;
         }
@@ -148,6 +156,7 @@ $staff_name = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : 'Staff';
             border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.02);
             transition: 0.3s;
+            text-align: center;
         }
 
         .stat-card:hover {
@@ -180,8 +189,16 @@ $staff_name = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : 'Staff';
             color: #10B981;
         }
 
-        .stat-card.orange .stat-icon {
+        .stat-card.yellow .stat-icon {
             color: #F59E0B;
+        }
+
+        .stat-card.orange .stat-icon {
+            color: #EF4444;
+        }
+
+        .stat-card.purple .stat-icon {
+            color: #8B5CF6;
         }
 
         .staff-actions {
@@ -230,6 +247,17 @@ $staff_name = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : 'Staff';
         .staff-actions a.green:hover {
             background: #059669;
             border-color: #059669;
+        }
+
+        .staff-actions a.yellow {
+            background: #F59E0B;
+            border-color: #F59E0B;
+            color: #0F172A;
+        }
+
+        .staff-actions a.yellow:hover {
+            background: #D97706;
+            border-color: #D97706;
         }
 
         .recent-section {
@@ -311,6 +339,12 @@ $staff_name = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : 'Staff';
             border: 1px solid rgba(239, 68, 68, 0.06);
         }
 
+        .badge-used {
+            background: rgba(56, 189, 248, 0.06);
+            color: #38BDF8;
+            border: 1px solid rgba(56, 189, 248, 0.06);
+        }
+
         .no-data {
             text-align: center;
             padding: 40px 20px;
@@ -321,6 +355,25 @@ $staff_name = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : 'Staff';
             font-size: 40px;
             margin-bottom: 12px;
             opacity: 0.3;
+        }
+
+        /* ===== USED ROW STYLING ===== */
+        table tr.used-row {
+            opacity: 0.7;
+            background: rgba(56, 189, 248, 0.02);
+        }
+
+        table tr.used-row td {
+            color: #94A3B8;
+        }
+
+        table tr.used-row .badge-used {
+            opacity: 0.8;
+        }
+
+        table tr.used-row .booking-code {
+            color: #38BDF8 !important;
+            text-decoration: line-through;
         }
 
         @media (max-width: 768px) {
@@ -384,20 +437,30 @@ $staff_name = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : 'Staff';
             <div class="stat-card green">
                 <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
                 <div class="stat-number"><?php echo $stats['active_tickets']; ?></div>
-                <div class="stat-label">Active Tickets</div>
+                <div class="stat-label">Confirmed</div>
+            </div>
+            <div class="stat-card yellow">
+                <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                <div class="stat-number"><?php echo $stats['pending_tickets']; ?></div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-card purple">
+                <div class="stat-icon"><i class="fas fa-check-double"></i></div>
+                <div class="stat-number"><?php echo $stats['used_tickets']; ?></div>
+                <div class="stat-label">Used</div>
             </div>
             <div class="stat-card orange">
                 <div class="stat-icon"><i class="fas fa-history"></i></div>
                 <div class="stat-number"><?php echo $stats['cancelled_tickets']; ?></div>
-                <div class="stat-label">Cancelled Tickets</div>
+                <div class="stat-label">Cancelled</div>
             </div>
         </div>
 
         <div class="staff-actions">
             <a href="staff_create_booking.php" class="primary"><i class="fas fa-user-plus"></i> Assist Booking</a>
             <a href="staff_verify_ticket.php" class="green"><i class="fas fa-check-circle"></i> Verify Ticket</a>
-            <a href="manage_bookings.php"><i class="fas fa-ticket-alt"></i> Manage Bookings</a>
-            <a href="board_ticket.php"><i class="fas fa-shuttle-van"></i> Board Ticket</a>
+            <a href="manage_bookings.php" class="yellow"><i class="fas fa-ticket-alt"></i> Manage Bookings</a>
+           
         </div>
 
         <div class="recent-section">
@@ -418,11 +481,33 @@ $staff_name = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : 'Staff';
                         </thead>
                         <tbody>
                             <?php foreach ($recent_bookings as $booking): ?>
-                                <tr>
-                                    <td><strong><?php echo htmlspecialchars($booking['full_name']); ?></strong></td>
-                                    <td><?php echo htmlspecialchars($booking['seat_number']); ?></td>
-                                    <td style="font-weight:600;color:#3B82F6;"><?php echo htmlspecialchars($booking['booking_code']); ?></td>
-                                    <td><span class="badge badge-<?php echo $booking['status']; ?>"><?php echo ucfirst($booking['status']); ?></span></td>
+                                <?php
+                                $is_used = ($booking['status'] == 'used');
+                                ?>
+                                <tr class="<?php echo $is_used ? 'used-row' : ''; ?>">
+                                    <td>
+                                        <strong style="<?php echo $is_used ? 'color:#94A3B8;' : ''; ?>">
+                                            <?php echo htmlspecialchars($booking['full_name']); ?>
+                                        </strong>
+                                    </td>
+                                    <td style="<?php echo $is_used ? 'color:#94A3B8;' : ''; ?>">
+                                        <?php echo htmlspecialchars($booking['seat_number']); ?>
+                                    </td>
+                                    <td style="font-weight:600;color:#3B82F6;" class="booking-code">
+                                        <?php echo htmlspecialchars($booking['booking_code']); ?>
+                                        <?php if ($is_used): ?>
+                                            <span style="color:#38BDF8; font-size:10px; margin-left:4px;">(Used)</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-<?php echo $booking['status']; ?>">
+                                            <?php if ($is_used): ?>
+                                                <i class="fas fa-check-double"></i> Used
+                                            <?php else: ?>
+                                                <?php echo ucfirst($booking['status']); ?>
+                                            <?php endif; ?>
+                                        </span>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>

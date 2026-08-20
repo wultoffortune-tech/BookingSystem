@@ -217,6 +217,13 @@ if (!$ticket) {
             border: 1px solid rgba(239, 68, 68, 0.06);
         }
 
+        .status-badge.used {
+            background: rgba(56, 189, 248, 0.06);
+            color: #38BDF8;
+            border: 1px solid rgba(56, 189, 248, 0.06);
+        }
+
+
         .footer-text {
             margin-top: 15px;
             color: #64748B;
@@ -392,6 +399,12 @@ if (!$ticket) {
                 border: 1px solid rgba(239, 68, 68, 0.1);
             }
 
+            .status-badge.used {
+                background: rgba(56, 189, 248, 0.1);
+                color: #0284C7;
+                border: 1px solid rgba(56, 189, 248, 0.1);
+            }
+
             .assisted-badge {
                 background: rgba(59, 130, 246, 0.1);
                 color: #2563EB;
@@ -514,7 +527,12 @@ if (!$ticket) {
 
         <div>
             <span class="status-badge <?php echo $ticket['status']; ?>">
-                <i class="fas <?php echo $ticket['status'] == 'confirmed' ? 'fa-check-circle' : ($ticket['status'] == 'pending' ? 'fa-clock' : 'fa-times-circle'); ?>"></i>
+                <i class="fas <?php
+                                echo $ticket['status'] == 'confirmed' ? 'fa-check-circle'
+                                    : ($ticket['status'] == 'pending' ? 'fa-clock'
+                                        : ($ticket['status'] == 'used' ? 'fa-check-double'
+                                            : 'fa-times-circle'));
+                                ?>"></i>
                 <?php echo ucfirst($ticket['status']); ?>
             </span>
             <?php if (isset($ticket['assisted_by_staff']) && $ticket['assisted_by_staff'] == 1): ?>

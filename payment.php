@@ -38,6 +38,9 @@ if (isset($_GET['cancel']) && $_GET['cancel'] == 'true') {
             if ($res['status'] == 'cancelled') {
                 $cancel_message = '⚠️ This booking is already cancelled.';
                 $cancel_type = 'error';
+            } elseif ($res['status'] == 'used') {
+                $cancel_message = '❌ This ticket has already been used and cannot be cancelled.';
+                $cancel_type = 'error';
             } else {
                 // Update reservation status to cancelled
                 $stmt = $pdo->prepare("UPDATE reservation SET status = 'cancelled', seats_released = 1 WHERE reservation_id = ? AND passenger_id = ?");
@@ -235,6 +238,47 @@ include 'includes/header.php';
         font-size: 18px;
     }
 
+    /* ===== BOOKING CODE DISPLAY ===== */
+    .booking-code-row {
+        background: rgba(56, 189, 248, 0.04);
+        border: 1px solid rgba(56, 189, 248, 0.06);
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-top: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .booking-code-row .code-label {
+        color: #94A3B8;
+        font-size: 13px;
+    }
+
+    .booking-code-row .code-label i {
+        color: #38BDF8;
+        margin-right: 6px;
+    }
+
+    .payment-status.used {
+        background: rgba(56, 189, 248, 0.1);
+        color: #38BDF8;
+    }
+
+    .booking-code-row .code-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: #38BDF8;
+        letter-spacing: 2px;
+        font-family: monospace;
+    }
+
+    .booking-code-row .code-value i {
+        color: #34D399;
+        font-size: 16px;
+        margin-right: 6px;
+    }
+
     .payment-status {
         display: inline-block;
         padding: 4px 16px;
@@ -284,7 +328,7 @@ include 'includes/header.php';
         transform: none;
     }
 
-    /* ===== CANCEL BUTTON - FIXED ===== */
+    /* ===== CANCEL BUTTON ===== */
     .btn-cancel-booking {
         display: inline-flex;
         align-items: center;
@@ -417,6 +461,16 @@ include 'includes/header.php';
         .payment-card {
             padding: 20px;
         }
+
+        .booking-code-row {
+            flex-direction: column;
+            text-align: center;
+            gap: 4px;
+        }
+
+        .booking-code-row .code-value {
+            font-size: 18px;
+        }
     }
 </style>
 
@@ -488,11 +542,28 @@ include 'includes/header.php';
                     <span class="label">Status</span>
                     <span class="value">
                         <span class="payment-status <?php echo $reservation['status']; ?>">
-                            <i class="fas <?php echo $reservation['status'] == 'confirmed' ? 'fa-check-circle' : ($reservation['status'] == 'cancelled' ? 'fa-times-circle' : 'fa-clock'); ?>"></i>
+                            <i class="fas <?php
+                                            echo $reservation['status'] == 'confirmed' ? 'fa-check-circle'
+                                                : ($reservation['status'] == 'cancelled' ? 'fa-times-circle'
+                                                    : ($reservation['status'] == 'used' ? 'fa-check-double'
+                                                        : 'fa-clock'));
+                                            ?>"></i>
                             <?php echo ucfirst(htmlspecialchars($reservation['status'])); ?>
                         </span>
                     </span>
                 </div>
+
+                <!-- ===== BOOKING CODE DISPLAY ===== -->
+                <?php if (isset($reservation['booking_code']) && !empty($reservation['booking_code'])): ?>
+                    <div class="booking-code-row">
+                        <span class="code-label">
+                            <i class="fas fa-ticket-alt"></i> Booking Code
+                        </span>
+                        <span class="code-value">
+                            <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($reservation['booking_code']); ?>
+                        </span>
+                    </div>
+                <?php endif; ?>
 
                 <div class="detail-row" style="border-bottom: none; padding-top: 16px;">
                     <span class="label" style="font-weight: 700; color: #FFFFFF;">Total Amount</span>
@@ -504,14 +575,16 @@ include 'includes/header.php';
             <div class="payment-card">
                 <h3><i class="fas fa-credit-card"></i> Payment Method</h3>
 
-                <?php if ($reservation['status'] !== 'confirmed' && $reservation['status'] !== 'cancelled'): ?>
+                <?php if ($reservation['status'] !== 'confirmed' && $reservation['status'] !== 'cancelled' && $reservation['status'] !== 'used'): ?>
                     <!-- Payment Form for Pending Bookings -->
                     <form method="POST" action="payment.php?reservation_id=<?php echo $reservation_id; ?>">
                         <input type="hidden" name="reservation_id" value="<?php echo $reservation_id; ?>">
 
                         <div style="margin-bottom:20px; color:#94A3B8; font-size:14px;">
                             <p><i class="fas fa-info-circle" style="color:#38BDF8;"></i> Click pay to confirm and complete the reservation.</p>
-                            
+                            <p style="margin-top:8px; font-size:13px; color:#64748B;">
+                                <i class="fas fa-shield-alt" style="color:#38BDF8;"></i> Secure payment via cash at counter
+                            </p>
                         </div>
 
                         <button type="submit" name="pay_now" class="btn-pay">
@@ -545,7 +618,7 @@ include 'includes/header.php';
                     <?php if ($payment): ?>
                         <div class="payment-info">
                             <p><i class="fas fa-receipt"></i> Payment Details:</p>
-                            <!-- <p>Method: <strong style="color:#FFFFFF;"><?php echo ucfirst($payment['payment_method']); ?></strong></p> -->
+                            <p>Method: <strong style="color:#FFFFFF;"><?php echo ucfirst($payment['payment_method']); ?></strong></p>
                             <p>Reference: <span class="ref"><?php echo htmlspecialchars($payment['transaction_reference']); ?></span></p>
                             <p>Date: <?php echo date('d M Y H:i', strtotime($payment['payment_date'])); ?></p>
                         </div>
@@ -557,6 +630,11 @@ include 'includes/header.php';
                         onclick="return confirm('Are you sure you want to cancel this confirmed booking?\n\nRoute: <?php echo addslashes($reservation['original_city'] . ' → ' . $reservation['destination']); ?>\nSeat: <?php echo $reservation['seat_number']; ?>\n\nThis action cannot be undone.');">
                         <i class="fas fa-times"></i> Cancel Booking
                     </a>
+                <?php elseif ($reservation['status'] === 'used'): ?>
+                    <!-- Used Ticket -->
+                    <div style="margin-bottom:20px; color:#38BDF8; font-size:14px;">
+                        <p><i class="fas fa-check-double"></i> This ticket has already been used and cannot be modified.</p>
+                    </div>
 
                 <?php elseif ($reservation['status'] === 'cancelled'): ?>
                     <!-- Cancelled Booking -->
@@ -568,9 +646,9 @@ include 'includes/header.php';
                     </div>
                 <?php endif; ?>
 
-                <!-- <div style="margin-top:20px; color:#64748B; font-size:13px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.04);">
+                <div style="margin-top:20px; color:#64748B; font-size:13px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.04);">
                     <i class="fas fa-lock" style="color:#38BDF8;"></i> Secure transaction
-                </div> -->
+                </div>
 
                 <a href="bookings.php" class="btn-bookings">
                     <i class="fas fa-arrow-left"></i> View My Bookings
