@@ -1,7 +1,7 @@
 <?php
 // Database configuration based on your schema
 $host = 'localhost';
-$dbname = 'booking-system';
+$dbname = 'reservation-system';
 $username = 'root';
 $password = '';
 
