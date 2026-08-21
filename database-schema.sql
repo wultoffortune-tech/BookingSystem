@@ -1,10 +1,4 @@
--- ============================================
--- RESERVATION SYSTEM - COMPLETE DATABASE
--- All tables match your PHP code
--- MySQL 5.6/5.7 Compatible
--- ============================================
 
--- ============================================
 -- CREATE DATABASE
 -- ============================================
 DROP DATABASE IF EXISTS `reservation-system`;
@@ -70,20 +64,7 @@ CREATE TABLE `agency` (
     UNIQUE KEY `agency_code` (`agency_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- ============================================
--- 4. COUNTER TABLE (Legacy)
--- ============================================
-CREATE TABLE `counter` (
-    `agency_id` int(11) NOT NULL AUTO_INCREMENT,
-    `admin_id` int(11) NOT NULL,
-    `location` varchar(100) DEFAULT NULL,
-    `city` varchar(100) DEFAULT NULL,
-    `name` varchar(100) DEFAULT NULL,
-    `phone_number` varchar(20) DEFAULT NULL,
-    `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`agency_id`),
-    KEY `counter_ibfk_1` (`admin_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+-- ==========================================
 
 -- ============================================
 -- 5. BUS TABLE
