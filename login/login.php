@@ -35,7 +35,13 @@ include '../includes/header.php';
                     <i class="fas fa-arrow-left"></i> Back to Home
                 </a>
             </div> -->
-
+            <!-- Logo -->
+            <div class="login-logo form-logo-card">
+                <img src="<?php echo $base_url; ?>assets/images/logo.png" alt="CamExpress logo" class="logo-image">
+                <div class="logo-text">
+                    <span>CamExpress</span>
+                </div>
+            </div>
             <h2>Sign in to your account</h2>
             <p class="login-desc">Enter your credentials to continue</p>
 
@@ -51,7 +57,8 @@ include '../includes/header.php';
             <?php endif; ?>
 
             <!-- Login Form -->
-            <form class="login-form" id="loginForm" action="login-process.php" method="POST">
+            <form class="login-form" id="loginForm" action="login-process.php"
+                method="POST">
 
                 <div class="form-group">
                     <label for="email">Email Address</label>

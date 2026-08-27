@@ -63,16 +63,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt2 = $pdo->prepare("SELECT * FROM staff WHERE user_id = ? AND status = 'active'");
                 $stmt2->execute([$user['user_id']]);
                 $staff = $stmt2->fetch();
-                
+
                 if ($staff) {
                     $_SESSION['staff_logged_in'] = true;
                     $_SESSION['staff_id'] = $staff['staff_id'];
                     $_SESSION['staff_position'] = $staff['position'];
                     $response['redirect'] = '../staff/staff_dashboard.php';
-                } else {
-                    // Staff record not found or inactive - redirect to home
-                    $response['redirect'] = '../home.php';
                 }
+                // } else {
+                //     // Staff record not found or inactive - redirect to home
+                //     $response['redirect'] = '../home.php';
+                // }
             } else {
                 // Regular passenger - redirect to passenger dashboard
                 $response['redirect'] = '../passenger/passenger_dashboard.php';

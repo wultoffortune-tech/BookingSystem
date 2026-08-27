@@ -344,3 +344,28 @@ SELECT '✅ Staff Activities', COUNT(*) FROM staff_activities;
 -- SHOW ALL TABLES
 -- ============================================
 SHOW TABLES;
+-- Create table to store generated reports
+CREATE TABLE IF NOT EXISTS `report_logs` (
+    `report_id` int(11) NOT NULL AUTO_INCREMENT,
+    `report_type` varchar(50) NOT NULL,
+    `generated_by` int(11) NOT NULL,
+    `date_range_start` date DEFAULT NULL,
+    `date_range_end` date DEFAULT NULL,
+    `parameters` text DEFAULT NULL,
+    `generated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    `file_format` varchar(20) DEFAULT 'PDF',
+    `file_path` varchar(255) DEFAULT NULL,
+    PRIMARY KEY (`report_id`),
+    KEY `generated_by` (`generated_by`),
+    CONSTRAINT `report_logs_ibfk_1` FOREIGN KEY (`generated_by`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Create table for report templates
+CREATE TABLE IF NOT EXISTS `report_templates` (
+    `template_id` int(11) NOT NULL AUTO_INCREMENT,
+    `template_name` varchar(100) NOT NULL,
+    `template_description` text DEFAULT NULL,
+    `template_content` text DEFAULT NULL,
+    `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`template_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

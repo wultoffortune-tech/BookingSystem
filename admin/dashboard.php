@@ -237,7 +237,12 @@ if (isset($_SESSION['user_name']) && !empty($_SESSION['user_name'])) {
             <a href="../home.php"><i class="fas fa-home"></i> View Website</a>
             <a href="users.php" class="danger"><i class="fas fa-users-cog"></i> Manage Users</a>
             <a href="../staff/staff_dashboard.php"><i class="fas fa-user-shield"></i> Manage Staff</a>
-            <a href="../admin/agency.php"><i class="fas fa-cash-register"></i> Manage Agency</a>
+            <!-- <li>
+                <a href="reports.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'reports.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-chart-bar"></i> Reports & Analytics
+                </a>
+            </li> -->
+
         </div>
 
         <!-- ===== RECENT BOOKINGS ===== -->
